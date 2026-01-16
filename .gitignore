@@ -1,0 +1,9 @@
+venv/
+logs/
+RAG_Project.egg-info/
+.env
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc

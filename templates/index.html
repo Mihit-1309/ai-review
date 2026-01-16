@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product Review Summary</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #555;
+            margin-bottom: 25px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            font-size: 15px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1e40af;
+        }
+
+        .output {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-left: 5px solid #2563eb;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .output h3 {
+            margin-top: 0;
+        }
+
+        .loader {
+            display: none;
+            margin-top: 15px;
+            color: #2563eb;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 13px;
+            color: #777;
+        }
+        .active-topic {
+           background-color: #1e40af;
+  }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Customer Review Summary</h1>
+    <p class="subtitle">
+        Generate a concise <strong>“Customers say”</strong> summary from product reviews
+    </p>
+
+    <!-- Question Input -->
+    <textarea id="questionInput"
+        placeholder="Example:
+Summarize customer opinions about this product
+"></textarea>
+<div>Enter Store ID:</div>
+<input id="wsid" placeholder="Enter Store ID" /></br></br>
+<div>Enter Product ID:</div>
+<input id="productId" placeholder="Enter Product ID" /></br>
+
+
+    <button onclick="generateSummary('neutral')">Generate Summary</button>
+    <button onclick="generateSummary('positive')">Positive AI Summary</button>
+    <button onclick="generateSummary('negative')">Negative AI Summary</button>
+    <button onclick="getTopWords()">Top 10 Words</button>
+    <div class="output" id="wordsBox" style="display:none">
+    <h3>Top discussed words</h3>
+    <ul id="wordsList"></ul>
+</div>
+
+
+    <div class="loader" id="loader">Generating summary...</div>
+
+    <!-- Output -->
+    <!-- <div class="output" id="summaryBox">
+        <h3>Customers say</h3>
+        <p id="summaryText"></p>
+    </div> -->
+    <div class="output" id="summaryBox">
+  <h3>Customers say</h3>
+
+  <!-- Topic buttons -->
+  <div id="topicButtons" style="margin-bottom: 15px;"></div>
+
+  <!-- Topic summary -->
+  <div id="topicSummary" style="display:none;">
+    <p id="summaryText"></p>
+  </div>
+</div>
+</div>
+
+<footer>
+    AI-generated summary based on customer reviews
+</footer>
+
+<script>
+    let topicData = [];
+//     async function generateSummary(type) {
+//         const question = document.getElementById("questionInput").value.trim();
+//         const summaryBox = document.getElementById("summaryBox");
+//         const summaryText = document.getElementById("summaryText");
+//         const loader = document.getElementById("loader");
+
+//         if (!question) {
+//             alert("Please enter a question or instruction.");
+//             return;
+//         }
+
+//         summaryBox.style.display = "none";
+//         loader.style.display = "block";
+
+//         try {
+//             const response = await fetch("/ask", {
+//                 method: "POST",
+//                 headers: {
+//                     "Content-Type": "application/json"
+//                 },
+//                 body: JSON.stringify({
+//                     question: question,
+//                     summary_type: type
+//                 })
+//             });
+
+//             const data = await response.json();
+            
+//             // -----------
+//             topicData = data.topics || [];
+
+//             const buttonsContainer = document.getElementById("topicButtons");
+//             const summaryBox = document.getElementById("summaryBox");
+//             const summaryText = document.getElementById("summaryText");
+//             const topicSummary = document.getElementById("topicSummary");
+
+//             // Reset UI
+//             buttonsContainer.innerHTML = "";
+//             summaryText.innerText = "";
+//             topicSummary.style.display = "none";
+
+//             // Create topic buttons
+//             topicData.forEach((item, index) => {
+//                 const btn = document.createElement("button");
+//                 btn.innerText = item.topic;
+
+//                 btn.style.marginRight = "10px";
+//                 btn.style.marginBottom = "10px";
+
+//                 // btn.onclick = () => showTopicSummary(index);
+//                 // ------------
+//                 btn.onclick = () => {
+//                     document.querySelectorAll("#topicButtons button")
+//                         .forEach(b => b.classList.remove("active-topic"));
+
+//                     btn.classList.add("active-topic");
+//                     showTopicSummary(index);
+//                 };
+//                 //-------------
+
+//                 buttonsContainer.appendChild(btn);
+//             });
+
+//             // Show summary box
+//             summaryBox.style.display = "block";
+// // ------------
+
+
+//             summaryText.innerText = data.answer;
+//             summaryBox.style.display = "block";
+
+//         } catch (error) {
+//             alert("Failed to generate summary. Please try again.");
+//             console.error(error);
+//         } finally {
+//             loader.style.display = "none";
+//         }
+//     }
+// --------------
+
+
+
+
+
+
+
+
+
+async function generateSummary(type) {
+    const question = document.getElementById("questionInput").value.trim();
+    const summaryBox = document.getElementById("summaryBox");
+    const summaryText = document.getElementById("summaryText");
+    const loader = document.getElementById("loader");
+
+
+    
+    if (type !== "neutral" && !question) {
+        alert("Please enter a question for this summary type.");
+        return;
+    }
+
+    loader.style.display = "block";
+    summaryBox.style.display = "none";
+
+    try {
+        const response = await fetch("/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                question: question,
+                wsid: document.getElementById("wsid").value,
+                product_id: document.getElementById("productId").value,
+                summary_type: type
+            })
+        });
+
+        const data = await response.json();
+
+        // 🔹 Neutral summary
+        // Neutral summary
+        if (type === "neutral") {
+            document.getElementById("topicButtons").innerHTML = "";
+
+            summaryText.innerText =
+                data.answer || "No summary available.";
+
+            document.getElementById("topicSummary").style.display = "block";
+            document.getElementById("summaryBox").style.display = "block";
+
+            return;
+        }
+
+
+        // 🔹 Positive / Negative topic-wise
+        topicData = data.topics || [];
+
+        const buttonsContainer = document.getElementById("topicButtons");
+        buttonsContainer.innerHTML = "";
+        summaryText.innerText = "";
+        document.getElementById("topicSummary").style.display = "none";
+
+        topicData.forEach((item, index) => {
+            const btn = document.createElement("button");
+            btn.innerText = item.topic;
+
+            btn.onclick = () => {
+                document
+                  .querySelectorAll("#topicButtons button")
+                  .forEach(b => b.classList.remove("active-topic"));
+
+                btn.classList.add("active-topic");
+                showTopicSummary(index);
+            };
+            buttonsContainer.appendChild(btn);
+        });
+
+        summaryBox.style.display = "block";
+
+    } catch (error) {
+        alert("Failed to generate summary.");
+        console.error(error);
+    } finally {
+        loader.style.display = "none";
+    }
+}
+
+
+
+
+function showTopicSummary(index) {
+    document.getElementById("summaryText").innerText =
+        topicData[index].summary;
+
+    document.getElementById("topicSummary").style.display = "block";
+}
+
+// -----------------
+async function getTopWords() {
+    const box = document.getElementById("wordsBox");
+    const list = document.getElementById("wordsList");
+
+    box.style.display = "none";
+    list.innerHTML = "";
+
+    try {
+        const response = await fetch("/top-words");
+        const data = await response.json();
+
+        if (!data.phrases || data.phrases.length === 0) {
+            list.innerHTML = "<li>No data available</li>";
+        } else {
+            data.phrases.forEach(item => {
+                const li = document.createElement("li");
+                li.innerText = `${item.phrase} (${item.count})`;
+                list.appendChild(li);
+            });
+        }
+
+        box.style.display = "block";
+
+    } catch (err) {
+        alert("Failed to fetch top phrases");
+        console.error(err);
+    }
+}
+</script>
+
+
+</body>
+</html>
