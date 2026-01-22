@@ -14,6 +14,7 @@ def load_llm(model_name: str = GROQ_MODEL_NAME,groq_api_key: str = GROQ_API_KEY)
             groq_api_key = groq_api_key,
             model_name = model_name,
             temperature=0,
+            top_p = 1,
             max_tokens=2048
         )
 

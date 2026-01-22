@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from itertools import islice
+from components.topics import generate_top_topics
 
 from components.retriever import create_qa_chain
 from common.logger import get_logger
@@ -7,7 +8,7 @@ from common.custom_exception import CustomException
 from collections import Counter
 import re
 from components.vector_store import load_vector_store
-
+from components.database import reviews_collection
 logger = get_logger(__name__)
 
 app = Flask(__name__)
@@ -23,7 +24,68 @@ def index():
     """
     return render_template("index.html")
 
+# -------------------------------------------------------------------------------
+@app.route("/reviews", methods=["POST"])
+def add_review():
+    try:
+        data = request.get_json(force=True)
 
+        required = ["review_id", "product_id", "product_name", "wsid", "rating", "review_text"]
+
+        for field in required:
+            if field not in data:
+                return jsonify({"error": f"{field} is required"}), 400
+            
+        data["rating"] = int(data["rating"])
+        data["embedded"] = False  # so listener embeds it
+        reviews_collection.insert_one(data)
+
+        return jsonify({"status": "ok"}), 200
+
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to insert review"}), 500
+    
+
+@app.route("/reviews/<product_id>", methods=["GET"])
+def get_reviews(product_id):
+    try:
+        wsid = request.args.get("wsid")
+
+        if not wsid:
+            return jsonify({"error": "wsid is required"}), 400
+
+        vectorstore = load_vector_store()
+        if not vectorstore:
+            return jsonify({"error": "Vector store not available"}), 500
+
+        docs = vectorstore.similarity_search(
+            query="review",   # neutral query
+            k=50,
+            filter={
+                "WSID": str(wsid),
+                "product_id": str(product_id)
+            }
+        )
+
+        results = []
+        for d in docs:
+            results.append({
+                "review_text": d.page_content,
+                "product_id": d.metadata.get("product_id"),
+                "product_name": d.metadata.get("product_name"),
+                "rating": d.metadata.get("rating"),
+                "wsid": d.metadata.get("WSID")
+            })
+
+        return jsonify(results)
+
+    except Exception as e:
+        logger.error("Failed to fetch reviews from Pinecone", exc_info=True)
+        return jsonify([]), 200
+
+
+# --------------------------------------------------------------------------------
 # ===============================
 # Ask / Summarize Endpoint
 # ===============================
@@ -35,7 +97,7 @@ def ask():
     try:
         data = request.get_json(force=True)
         wsid = data.get("wsid")
-        product_id = int(data.get("product_id"))
+        product_id = str(data.get("product_id"))
         question = data.get("question")
 
         summary_type = data.get("summary_type", "neutral")
@@ -44,8 +106,8 @@ def ask():
         if not wsid or not product_id:
             return jsonify({"error": "WSID and product_id required"}), 400
         
-        # if not question:
-        #     return jsonify({"error": "Question is required"}), 400
+        if not question:
+            return jsonify({"error": "Question is required"}), 400
 
         # if not isinstance(question, str):
         #     return jsonify({"error": "Question must be a string"}), 400
@@ -91,56 +153,66 @@ def ask():
         # #     "answer": answer
         # # })
         # return jsonify(result)
-        if summary_type == "neutral":
-            result = qa_chain.invoke("reviews")
-        else:
-            result = qa_chain.invoke(question or "reviews")
+        result = qa_chain.invoke(question)
+
         response = {
             "answer": "",
             "topics": []
         }
         logger.info(f"RAW LLM RESULT: {result}")
-        # if isinstance(result, dict):
-        #     response["answer"] = (
-        #         result.get("answer")
-        #         or result.get("result")
-        #         or ""
-        #     )
-        #     response["topics"] = result.get("topics", [])
-        # if isinstance(result, dict):
-        #      # ✅ NEUTRAL summary
-        #     if "summary" in result:
-        #         response["answer"] = result["summary"]
+        if summary_type == "neutral":
 
-        #     # ✅ POSITIVE / NEGATIVE summaries
-        #     elif "topics" in result:
-        #         response["topics"] = result["topics"]
-        if isinstance(result, dict):
+    # 🔹 If LLM returned STRING (StrOutputParser)
+            if isinstance(result, str):
+                response["answer"] = result.strip()
 
-    # ✅ NEUTRAL summary
-            if "summary" in result:
-                summary = result.get("summary", "").strip()
+            # 🔹 If LLM returned DICT (JsonOutputParser)
+            elif isinstance(result, dict) and "summary" in result:
+                response["answer"] = result["summary"].strip()
 
-                # 🔒 Guard against empty or incorrect neutral output
-                if not summary or "no reviews" in summary.lower():
-                    summary = (
-                        "Customers say the product generally meets expectations, "
-                        "with feedback highlighting performance, usability, and overall value."
-                    )
+            else:
+                response["answer"] = ""
 
-                response["answer"] = summary
-
-            # ✅ POSITIVE / NEGATIVE summaries
-            elif "topics" in result:
-                # Remove empty topic summaries (extra safety)
+        # =========================
+        # POSITIVE / NEGATIVE
+        # =========================
+        else:
+            if isinstance(result, dict) and "topics" in result:
                 response["topics"] = [
                     t for t in result["topics"]
                     if t.get("summary") and t["summary"].strip()
                 ]
 
+    #             ]
+    #     if isinstance(result, dict):
 
-        else:
-            response["answer"] = result
+    # # -------- NEUTRAL --------
+    #         if "summary" in result:
+    #             summary = result.get("summary", "").strip()
+
+    #             # If LLM refused or returned empty → retry once
+    #             # if (
+    #             #     not summary
+    #             #     or "no review" in summary.lower()
+    #             #     or "can't generate" in summary.lower()
+    #             #     or "insufficient" in summary.lower()
+    #             # ):
+    #             #     # retry neutral generation once
+    #             #     result_retry = qa_chain.invoke("reviews")
+    #             #     summary = result_retry.get("summary", "").strip()
+
+    #             response["answer"] = summary
+
+    #         # -------- POSITIVE / NEGATIVE --------
+    #         elif "topics" in result:
+    #             response["topics"] = [
+    #                 t for t in result["topics"]
+    #                 if t.get("summary") and t["summary"].strip()
+    #         ]
+
+
+    #     else:
+    #         response["answer"] = result
 
         return jsonify(response)
 
@@ -151,78 +223,30 @@ def ask():
         }), 500
     
 
-
-STOPWORDS = {
-    "the","is","and","to","of","a","in","for","on","with","this",
-    "that","it","as","are","was","but","be","have","has","had",
-    "very","also","from","they","them","their","you","your"
-}
-
-# GENERIC_WORDS = {
-#     "good","great","nice","product","products","item","items",
-#     "buy","use","used","using","work","works","working"
-# }
-
-def generate_ngrams(words, n):
-    return zip(*(islice(words, i, None) for i in range(n)))
-
-def clean_tokens(text):
-    tokens = re.findall(r"\b[a-z]{3,}\b", text.lower())
-    return [t for t in tokens if t not in STOPWORDS ]
-
-@app.route("/top-words", methods=["GET"])
-def top_words():
+@app.route("/topics", methods=["POST"])
+def topics():
+    """
+    Generate top semantic topics from reviews
+    """
     try:
-        vectorstore = load_vector_store()
-        retriever = vectorstore.as_retriever(search_kwargs={"k": 300})
+        data = request.get_json(force=True)
+        reviews = data.get("reviews")
 
-        docs = retriever.invoke("customer product reviews")
-        if not docs:
-            return jsonify({"phrases": []})
+        if not reviews or not isinstance(reviews, list):
+            return jsonify({"error": "reviews must be a list of strings"}), 400
 
-        text = " ".join(d.page_content for d in docs)
-        tokens = clean_tokens(text)
+        topics = generate_top_topics(reviews)
 
-        # Count ngrams
-        unigrams = Counter(tokens)
-        bigrams = Counter(" ".join(bg) for bg in generate_ngrams(tokens, 2))
+        return jsonify({
+            "topics": topics
+        })
 
+    except Exception as e:
+        logger.error("Topic generation failed", exc_info=True)
+        return jsonify({
+            "error": "Failed to generate topics"
+        }), 500
 
-        # Minimum frequency filter
-        unigrams = Counter({k:v for k,v in unigrams.items() if v >= 5})
-        bigrams = Counter({k:v for k,v in bigrams.items() if v >= 3})
-
-
-        # Combine with priority: trigram > bigram > unigram
-        candidates = []
-        # for phrase, count in trigrams.most_common():
-        #     candidates.append((phrase, count))
-        for phrase, count in bigrams.most_common():
-            candidates.append((phrase, count))
-        for phrase, count in unigrams.most_common():
-            candidates.append((phrase, count))
-
-        # Remove overlaps
-        final_phrases = []
-        used_tokens = set()
-
-        for phrase, count in candidates:
-            phrase_tokens = set(phrase.split())
-
-            if phrase_tokens & used_tokens:
-                continue
-
-            final_phrases.append({"phrase": phrase, "count": count})
-            used_tokens.update(phrase_tokens)
-
-            if len(final_phrases) == 10:
-                break
-
-        return jsonify({"phrases": final_phrases})
-
-    except Exception:
-        logger.exception("TOP WORDS FAILED")
-        return jsonify({"phrases": []}), 500
 # ===============================
 # Run App
 # ===============================

@@ -88,7 +88,7 @@
 </head>
 
 <body>
-
+<!--
 <div class="container">
     <h1>Customer Review Summary</h1>
     <p class="subtitle">
@@ -96,7 +96,7 @@
     </p>
 
     <!-- Question Input -->
-    <textarea id="questionInput"
+    <!-- <textarea id="questionInput"
         placeholder="Example:
 Summarize customer opinions about this product
 "></textarea>
@@ -113,7 +113,7 @@ Summarize customer opinions about this product
     <div class="output" id="wordsBox" style="display:none">
     <h3>Top discussed words</h3>
     <ul id="wordsList"></ul>
-</div>
+</div> 
 
 
     <div class="loader" id="loader">Generating summary...</div>
@@ -123,17 +123,90 @@ Summarize customer opinions about this product
         <h3>Customers say</h3>
         <p id="summaryText"></p>
     </div> -->
-    <div class="output" id="summaryBox">
+    <!-- <div class="output" id="summaryBox">
   <h3>Customers say</h3>
 
   <!-- Topic buttons -->
-  <div id="topicButtons" style="margin-bottom: 15px;"></div>
+  <!-- <div id="topicButtons" style="margin-bottom: 15px;"></div>
 
   <!-- Topic summary -->
-  <div id="topicSummary" style="display:none;">
+  <!-- <div id="topicSummary" style="display:none;">
     <p id="summaryText"></p>
   </div>
 </div>
+</div>   -->
+<div class="container">
+
+    <!-- TAB BUTTONS -->
+    <button onclick="showTab('summaryTab')">Summary</button>
+    <button onclick="showTab('addReviewTab')">Add Review</button>
+
+    <!-- ================= SUMMARY TAB ================= -->
+    <div id="summaryTab" style="display:block;">
+
+        <h1>Customer Review Summary</h1>
+        <p class="subtitle"><strong>“Customers say”</strong> summary based on product reviews</p>
+
+        <textarea id="questionInput" placeholder="Ask about customer opinions..."></textarea>
+
+        <div>Store ID:</div>
+        <input id="wsid" placeholder="Enter Store ID" /><br><br>
+
+        <div>Product ID:</div>
+        <input id="productId" placeholder="Enter Product ID" /><br>
+
+        <button onclick="generateSummary('neutral')">Generate Summary</button>
+        <button onclick="generateSummary('positive')">Positive AI Summary</button>
+        <button onclick="generateSummary('negative')">Negative AI Summary</button>
+        <button onclick="generateTopics()">Generate Top Topics</button>
+
+        <div class="output" id="topicBox">
+            <h3>Top Topics</h3>
+            <ul id="topicList"></ul>
+        </div>
+        <div class="loader" id="loader">Generating summary...</div>
+
+        <div class="output" id="summaryBox" style="display:none;">
+            <h3>Customers say</h3>
+            <div id="topicButtons"></div>
+            <div id="topicSummary" style="display:none;">
+                <p id="summaryText"></p>
+            </div>
+        </div>
+
+        <div class="output" id="wordsBox" style="display:none;">
+            <h3>Top discussed words</h3>
+            <ul id="wordsList"></ul>
+        </div>
+
+    </div>
+
+    <!-- ================= ADD REVIEW TAB ================= -->
+    <div id="addReviewTab" style="display:none;">
+
+        <h1>Add Review</h1>
+        <p class="subtitle">Insert new customer reviews into MongoDB</p>
+
+        <div>Store ID:</div>
+        <input id="new_wsid" placeholder="Store ID" /><br><br>
+
+        <div>Product ID:</div>
+        <input id="new_productId" placeholder="Product ID" /><br><br>
+        <div>Product Name:</div>
+        <input id="product_name" placeholder="Product Name" /><br><br>
+
+        <div>Rating:</div>
+        <input id="rating" type="number" min="1" max="5" placeholder="1-5" /><br><br>
+
+
+        <div>Review text:</div>
+        <textarea id="newReviewText" placeholder="Write customer review..."></textarea><br>
+
+        <button onclick="submitReview()">Submit Review</button>
+
+        <div id="reviewStatus" style="margin-top:10px;color:green;"></div>
+    </div>
+
 </div>
 
 <footer>
@@ -142,89 +215,76 @@ Summarize customer opinions about this product
 
 <script>
     let topicData = [];
-//     async function generateSummary(type) {
-//         const question = document.getElementById("questionInput").value.trim();
-//         const summaryBox = document.getElementById("summaryBox");
-//         const summaryText = document.getElementById("summaryText");
-//         const loader = document.getElementById("loader");
-
-//         if (!question) {
-//             alert("Please enter a question or instruction.");
-//             return;
-//         }
-
-//         summaryBox.style.display = "none";
-//         loader.style.display = "block";
-
-//         try {
-//             const response = await fetch("/ask", {
-//                 method: "POST",
-//                 headers: {
-//                     "Content-Type": "application/json"
-//                 },
-//                 body: JSON.stringify({
-//                     question: question,
-//                     summary_type: type
-//                 })
-//             });
-
-//             const data = await response.json();
-            
-//             // -----------
-//             topicData = data.topics || [];
-
-//             const buttonsContainer = document.getElementById("topicButtons");
-//             const summaryBox = document.getElementById("summaryBox");
-//             const summaryText = document.getElementById("summaryText");
-//             const topicSummary = document.getElementById("topicSummary");
-
-//             // Reset UI
-//             buttonsContainer.innerHTML = "";
-//             summaryText.innerText = "";
-//             topicSummary.style.display = "none";
-
-//             // Create topic buttons
-//             topicData.forEach((item, index) => {
-//                 const btn = document.createElement("button");
-//                 btn.innerText = item.topic;
-
-//                 btn.style.marginRight = "10px";
-//                 btn.style.marginBottom = "10px";
-
-//                 // btn.onclick = () => showTopicSummary(index);
-//                 // ------------
-//                 btn.onclick = () => {
-//                     document.querySelectorAll("#topicButtons button")
-//                         .forEach(b => b.classList.remove("active-topic"));
-
-//                     btn.classList.add("active-topic");
-//                     showTopicSummary(index);
-//                 };
-//                 //-------------
-
-//                 buttonsContainer.appendChild(btn);
-//             });
-
-//             // Show summary box
-//             summaryBox.style.display = "block";
-// // ------------
 
 
-//             summaryText.innerText = data.answer;
-//             summaryBox.style.display = "block";
+function showTab(tab) {
+    document.getElementById("summaryTab").style.display = "none";
+    document.getElementById("addReviewTab").style.display = "none";
 
-//         } catch (error) {
-//             alert("Failed to generate summary. Please try again.");
-//             console.error(error);
-//         } finally {
-//             loader.style.display = "none";
-//         }
-//     }
-// --------------
+    document.getElementById(tab).style.display = "block";
+}
+
+
+async function submitReview() {
+    const wsid = document.getElementById("new_wsid").value.trim();
+    const productId = document.getElementById("new_productId").value.trim();
+    const reviewText = document.getElementById("newReviewText").value.trim();
+
+    if (!wsid || !productId || !reviewText) {
+        alert("Store ID, Product ID and Review are required!");
+        return;
+    }
+
+    const rating = Number(document.getElementById("rating").value);
+
+    if (!rating || rating < 1 || rating > 5) {
+    alert("Rating must be between 1 and 5");
+    return;
+    }
+
+
+    const body = {
+        review_id: generateUUID(),
+        wsid: wsid,
+        product_id: productId,
+        product_name: document.getElementById("product_name").value,
+        rating: Number(document.getElementById("rating").value),
+        review_text: reviewText,
+        embedded: false
+    };
+
+    try {
+        const res = await fetch("/reviews", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            document.getElementById("reviewStatus").innerText =
+                "Review submitted successfully!";
+            document.getElementById("newReviewText").value = "";
+        } else {
+            alert("Error: " + (data.error || "Unknown Error"));
+        }
+
+    } catch (err) {
+        console.error(err);
+        alert("Failed to connect to server");
+    }
+}
 
 
 
-
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
 
 
 
@@ -319,35 +379,39 @@ function showTopicSummary(index) {
 }
 
 // -----------------
-async function getTopWords() {
-    const box = document.getElementById("wordsBox");
-    const list = document.getElementById("wordsList");
 
-    box.style.display = "none";
+async function generateTopics() {
+    const question = document.getElementById("questionInput").value.trim();
+
+    if (!question) {
+        alert("Please enter reviews");
+        return;
+    }
+
+    const reviews = question.split("\n");
+
+    const res = await fetch("/topics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews })
+    });
+
+    const data = await res.json();
+
+    const list = document.getElementById("topicList");
     list.innerHTML = "";
 
-    try {
-        const response = await fetch("/top-words");
-        const data = await response.json();
+    data.topics.forEach(t => {
+        const li = document.createElement("li");
+        li.innerText = `${t.topic} (${t.count})`;
+        list.appendChild(li);
+    });
 
-        if (!data.phrases || data.phrases.length === 0) {
-            list.innerHTML = "<li>No data available</li>";
-        } else {
-            data.phrases.forEach(item => {
-                const li = document.createElement("li");
-                li.innerText = `${item.phrase} (${item.count})`;
-                list.appendChild(li);
-            });
-        }
-
-        box.style.display = "block";
-
-    } catch (err) {
-        alert("Failed to fetch top phrases");
-        console.error(err);
-    }
+    document.getElementById("topicBox").style.display = "block";
 }
 </script>
+
+
 
 
 </body>

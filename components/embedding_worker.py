@@ -32,7 +32,8 @@ def embed_single_review(review: dict):
             "product_name": safe_str(review.get("product_name")),
             "rating": int(review.get("rating", 0)),
             "review_title": safe_str(review.get("review_title")),
-            "review_text": safe_str(review.get("review_text"))
+            "review_text": safe_str(review.get("review_text")),
+            "text": text
         }
     )
 
