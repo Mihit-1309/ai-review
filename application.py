@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from itertools import islice
-from components.topics import generate_top_topics
-
+from components.topics.processor import process_new_reviews
+from components.database import topic_store
 from components.retriever import create_qa_chain
 from common.logger import get_logger
 from common.custom_exception import CustomException
@@ -10,6 +10,7 @@ import re
 from components.vector_store import load_vector_store
 from components.database import reviews_collection
 logger = get_logger(__name__)
+from components.chatbot.chain import chat_with_reviews
 
 app = Flask(__name__)
 
@@ -116,7 +117,6 @@ def ask():
         if summary_type in ["positive", "negative"]:
                 if not question or not isinstance(question, str):
                     return jsonify({"error": "Question is required for this summary type"}), 400
-
         
         if summary_type not in ["neutral", "positive", "negative"]:
             summary_type = "neutral"
@@ -223,29 +223,119 @@ def ask():
         }), 500
     
 
-@app.route("/topics", methods=["POST"])
-def topics():
-    """
-    Generate top semantic topics from reviews
-    """
+# @app.route("/topics/top", methods=["POST"])
+# def get_top_topics():
+#     try:
+#         data = request.get_json(force=True)
+#         WSID = data.get("WSID")
+#         product_id = data.get("product_id")
+
+#         if not WSID or not product_id:
+#             return jsonify({"error": "WSID and product_id required"}), 400
+
+#         # Incremental update from Pinecone
+#         process_new_reviews(WSID, product_id)
+
+#         # Top-10 topics for THIS product ONLY
+#         topics = list(
+#             topic_store.find(
+#                 {"WSID": WSID, "product_id": product_id},
+#                 {"_id": 0, "topic": 1, "count": 1}
+#             )
+#             .sort("count", -1)
+#             .limit(10)
+#         )
+
+#         return jsonify({"topics": topics})
+
+#     except Exception as e:
+#         return jsonify({"error": "Failed to fetch topics"}), 500
+@app.route("/topics/top", methods=["POST"])
+def get_top_topics():
     try:
         data = request.get_json(force=True)
-        reviews = data.get("reviews")
+        WSID = data.get("WSID")
+        product_id = data.get("product_id")
 
-        if not reviews or not isinstance(reviews, list):
-            return jsonify({"error": "reviews must be a list of strings"}), 400
+        print("DEBUG: WSID =", WSID)
+        print("DEBUG: product_id =", product_id)
 
-        topics = generate_top_topics(reviews)
+        if not WSID or not product_id:
+            raise ValueError("WSID or product_id missing")
 
-        return jsonify({
-            "topics": topics
-        })
+        from components.topics.processor import process_new_reviews
+        process_new_reviews(WSID, product_id)
+
+        from components.database import topic_store
+        topics = list(
+            topic_store.find(
+                {"wsid": WSID, "product_id": product_id},
+                {"_id": 0, "topic": 1, "count": 1}
+            )
+            .sort("count", -1)
+            .limit(10)
+        )
+
+        print("DEBUG: topics found =", topics)
+
+        return jsonify({"topics": topics})
 
     except Exception as e:
-        logger.error("Topic generation failed", exc_info=True)
+        import traceback
+        print("\n🔥🔥🔥 ERROR IN /topics/top 🔥🔥🔥")
+        traceback.print_exc()
+        print("🔥🔥🔥 END ERROR 🔥🔥🔥\n")
+
         return jsonify({
-            "error": "Failed to generate topics"
+            "error": str(e)
         }), 500
+    
+    
+     
+@app.route("/api/reviews-by-topic", methods=["GET"])
+def get_reviews_by_topic():
+    topic = request.args.get("topic")
+    wsid = request.args.get("wsid")
+    product_id = request.args.get("product_id")
+
+    if not topic or not wsid or not product_id:
+        return jsonify({"error": "Missing required params (topic, wsid, product_id)"}), 400
+
+    topic_doc = topic_store.find_one({
+        "topic": topic,
+        "wsid": wsid,
+        "product_id": product_id
+    })
+
+    if not topic_doc:
+        return jsonify({"reviews": []}), 200
+
+    review_ids = topic_doc.get("review_ids", [])
+    
+    if not review_ids:
+        return jsonify({"reviews": []}), 200
+    
+
+    reviews = list(reviews_collection.find({
+        "review_id": {"$in": review_ids}
+    }, {"_id": 0}))  # Hide internal Mongo _id
+
+    return jsonify({"reviews": reviews})
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.get_json(force=True)
+
+    return jsonify(
+        chat_with_reviews(
+            wsid=data.get("wsid"),
+            product_id=data.get("product_id"),
+            question=data.get("question")
+        )
+    )
+
+
+
 
 # ===============================
 # Run App

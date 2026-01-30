@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
+        html, body {
+            height: 100%;
+        }
+
         body {
             font-family: Arial, Helvetica, sans-serif;
             background-color: #f5f5f5;
@@ -13,13 +17,14 @@
             padding: 0;
         }
 
+
         .container {
-            max-width: 900px;
-            margin: 50px auto;
+            width: 100%;
+            height: 100vh;
+            margin: 0;
             background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 24px 40px;
+            box-sizing: border-box;
         }
 
         h1 {
@@ -70,10 +75,17 @@
         }
 
         .loader {
+            position: absolute;
+            top: 120px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
             display: none;
-            margin-top: 15px;
-            color: #2563eb;
+            z-index: 999;
         }
+
 
         footer {
             margin-top: 40px;
@@ -82,65 +94,220 @@
             color: #777;
         }
         .active-topic {
-           background-color: #1e40af;
-  }
+           background-color: #00030b;
+        }
+        .topic-link {
+            color: #151515;
+            cursor: pointer;
+            padding: 3px 6px;
+        }
+        .topic-link:hover {
+            text-decoration: underline;
+        }
+
+        #topicBox, #topicList, .topic-link {
+            background: none; /* highlight click area */
+        }
+
+        #reviewsContent ul {
+            padding-left: 20px;
+        }
+
+        #reviewsContent li {
+            padding: 8px;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        /* ================= CHATBOT UI ================= */
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 260px); /* adjusts for header & inputs */
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+
+        .chat-input {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px;
+            padding: 10px 14px;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        .chat-input textarea {
+            flex: 1;
+            height: 40px !important;
+            min-height: 40px !important;
+            max-height: 120px;
+            resize: none;
+            padding: 8px 12px;
+            font-size: 14px;
+            line-height: 1.4;
+            border-radius: 10px;
+            box-sizing: border-box;
+            display: block;
+        }
+
+
+        .message {
+            max-width: 65%;
+            padding: 12px 16px;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: #2563eb;
+            color: white;
+            align-self: flex-end;
+            text-align: left;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .message.bot {
+            background: #e5e7eb;
+            color: #111;
+            align-self: flex-start;
+            text-align: left;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        }
+
+
+        .sources {
+            margin-top: 8px;
+            font-size: 13px;
+            background: #f9fafb;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        #chatInput {
+            flex: 1;
+            resize: none;
+            height: 40px;
+            min-height: 40px;
+            max-height: 120px;          /* 🔥 max growth (3 lines approx) */
+            padding: 8px 12px;
+            font-size: 14px;
+            line-height: 1.4;
+            border-radius: 10px;
+            box-sizing: border-box;
+            overflow-y: hidden;         /* no scrollbar until max */
+        }
+
+        #sendBtn {
+            height: 40px;
+            padding: 0 18px;
+            font-size: 14px;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        #sendBtn:hover {
+            background: #1e40af;
+        }
+
+        .chat-input button {
+            margin-top: 0 !important;   /* 🔥 THIS FIXES IT */
+            height: 40px;
+            padding: 0 18px;
+            font-size: 14px;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* ===== Review list inside chatbot ===== */
+
+       .review-item {
+            display: inline-block;
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .review-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .review-item * {
+            margin: 0 !important;
+            padding: 0;
+        }
+
+        .review-rating {
+            font-weight: 600;
+            margin-bottom: 2px !important;
+        }
+
+        .review-text {
+            line-height: 1.4;
+        }
+        .review-container {
+            margin: 6px 0 12px 0;
+            padding: 8px 10px;
+            background: #f9fafb;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        /* Small inline button (used for Show/Hide reviews) */
+        .review-toggle-btn {
+            margin-top: 6px;
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: auto;          /* 🔥 NOT full width */
+            display: inline-block;
+            align-self: flex-start; 
+        }
+
+        .review-toggle-btn:hover {
+            background: #1e40af;
+        }
+
     </style>
 </head>
 
 <body>
-<!--
-<div class="container">
-    <h1>Customer Review Summary</h1>
-    <p class="subtitle">
-        Generate a concise <strong>“Customers say”</strong> summary from product reviews
-    </p>
 
-    <!-- Question Input -->
-    <!-- <textarea id="questionInput"
-        placeholder="Example:
-Summarize customer opinions about this product
-"></textarea>
-<div>Enter Store ID:</div>
-<input id="wsid" placeholder="Enter Store ID" /></br></br>
-<div>Enter Product ID:</div>
-<input id="productId" placeholder="Enter Product ID" /></br>
-
-
-    <button onclick="generateSummary('neutral')">Generate Summary</button>
-    <button onclick="generateSummary('positive')">Positive AI Summary</button>
-    <button onclick="generateSummary('negative')">Negative AI Summary</button>
-    <button onclick="getTopWords()">Top 10 Words</button>
-    <div class="output" id="wordsBox" style="display:none">
-    <h3>Top discussed words</h3>
-    <ul id="wordsList"></ul>
-</div> 
-
-
-    <div class="loader" id="loader">Generating summary...</div>
-
-    <!-- Output -->
-    <!-- <div class="output" id="summaryBox">
-        <h3>Customers say</h3>
-        <p id="summaryText"></p>
-    </div> -->
-    <!-- <div class="output" id="summaryBox">
-  <h3>Customers say</h3>
-
-  <!-- Topic buttons -->
-  <!-- <div id="topicButtons" style="margin-bottom: 15px;"></div>
-
-  <!-- Topic summary -->
-  <!-- <div id="topicSummary" style="display:none;">
-    <p id="summaryText"></p>
-  </div>
-</div>
-</div>   -->
 <div class="container">
 
     <!-- TAB BUTTONS -->
     <button onclick="showTab('summaryTab')">Summary</button>
     <button onclick="showTab('addReviewTab')">Add Review</button>
-
+    <button onclick="showTab('chatTab')">Chatbot</button>
     <!-- ================= SUMMARY TAB ================= -->
     <div id="summaryTab" style="display:block;">
 
@@ -164,6 +331,11 @@ Summarize customer opinions about this product
             <h3>Top Topics</h3>
             <ul id="topicList"></ul>
         </div>
+        <div class="output" id="reviewsBox" style="display:none;">
+         <h3>Reviews for selected topic</h3>
+         <div id="reviewsContent"></div>
+        </div>
+
         <div class="loader" id="loader">Generating summary...</div>
 
         <div class="output" id="summaryBox" style="display:none;">
@@ -207,11 +379,38 @@ Summarize customer opinions about this product
         <div id="reviewStatus" style="margin-top:10px;color:green;"></div>
     </div>
 
+    <!-- ================= CHATBOT TAB ================= -->
+    <div id="chatTab" style="display:none;">
+
+        <h1>Review Chatbot</h1>
+        <p class="subtitle">
+            Ask questions and get answers grounded in customer reviews
+        </p>
+
+        <div>Store ID:</div>
+        <input id="chat_wsid" placeholder="Enter Store ID" /><br><br>
+
+        <div>Product ID:</div>
+        <input id="chat_productId" placeholder="Enter Product ID" /><br>
+
+        <div class="chat-container">
+            <div id="chatMessages" class="chat-messages"></div>
+
+            <div class="chat-input">
+                <textarea
+                    id="chatInput"
+                    rows = "1"
+                    placeholder="Ask something like: What do customers say about battery life?"
+                ></textarea>
+                <button id="sendBtn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+
+
 </div>
 
-<footer>
-    AI-generated summary based on customer reviews
-</footer>
 
 <script>
     let topicData = [];
@@ -220,7 +419,7 @@ Summarize customer opinions about this product
 function showTab(tab) {
     document.getElementById("summaryTab").style.display = "none";
     document.getElementById("addReviewTab").style.display = "none";
-
+    document.getElementById("chatTab").style.display = "none";
     document.getElementById(tab).style.display = "block";
 }
 
@@ -380,35 +579,233 @@ function showTopicSummary(index) {
 
 // -----------------
 
-async function generateTopics() {
-    const question = document.getElementById("questionInput").value.trim();
 
-    if (!question) {
-        alert("Please enter reviews");
+async function generateTopics() {
+    const wsid = document.getElementById("wsid").value.trim();
+    const productId = document.getElementById("productId").value.trim();
+
+    if (!wsid || !productId) {
+        alert("Please enter Store ID and Product ID");
         return;
     }
 
-    const reviews = question.split("\n");
-
-    const res = await fetch("/topics", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reviews })
-    });
-
-    const data = await res.json();
-
+    const topicBox = document.getElementById("topicBox");
     const list = document.getElementById("topicList");
+    const loader = document.getElementById("loader");
+
     list.innerHTML = "";
+    topicBox.style.display = "none";
+    loader.style.display = "block";
 
-    data.topics.forEach(t => {
-        const li = document.createElement("li");
-        li.innerText = `${t.topic} (${t.count})`;
-        list.appendChild(li);
-    });
+    try {
+        const res = await fetch("/topics/top", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                WSID: wsid,
+                product_id: productId
+            })
+        });
 
-    document.getElementById("topicBox").style.display = "block";
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.error || "Failed to fetch topics");
+            return;
+        }
+
+        if (!data.topics || data.topics.length === 0) {
+            list.innerHTML = "<li>No topics found</li>";
+        } else {
+            data.topics.forEach(t => {
+            const li = document.createElement("li");
+
+            const span = document.createElement("span");
+            span.className = "topic-link";
+            span.dataset.topic = t.topic;
+            span.innerText = `${t.topic} (${t.count})`;
+            span.style.cursor = "pointer";
+
+            span.onclick = () => {
+                console.log("CLICKED TOPIC:", t.topic);
+                fetchReviewsByTopic(t.topic);
+            };
+
+            li.appendChild(span);
+            list.appendChild(li);
+        });
+
+
+
+        }
+
+
+
+    } catch (err) {
+        console.error(err);
+        alert("Server error while fetching topics");
+    } finally {
+        loader.style.display = "none";
+        topicBox.style.display = "block";
+    }
 }
+async function fetchReviewsByTopic(topic) {
+    console.log("Fetching reviews for:", topic);
+
+    const wsid = document.getElementById("wsid").value.trim();
+    const productId = document.getElementById("productId").value.trim();
+
+    if (!wsid || !productId) {
+        alert("Store ID and Product ID required!");
+        return;
+    }
+
+    const res = await fetch(`/api/reviews-by-topic?topic=${encodeURIComponent(topic)}&wsid=${encodeURIComponent(wsid)}&product_id=${encodeURIComponent(productId)}`);
+    console.log("API URL:", res);
+    const data = await res.json();
+    console.log("API RESPONSE:", data);
+    const box = document.getElementById("reviewsBox");
+    const content = document.getElementById("reviewsContent");
+
+    if (!data.reviews || data.reviews.length === 0) {
+        content.innerHTML = `<p>No reviews found for topic: <b>${topic}</b></p>`;
+        box.style.display = "block";
+        return;
+    }
+
+    let html = `<p><b>Topic:</b> ${topic}</p><ul>`;
+    data.reviews.forEach(r => {
+        html += `
+            <li style="margin-bottom:10px;">
+                <b>Rating:</b> ${r.rating}<br>
+                <b>Review:</b> ${r.review_text}
+            </li>
+        `;
+    });
+    html += `</ul>`;
+
+    content.innerHTML = html;
+    box.style.display = "block";
+}
+
+async function sendMessage() {
+    const input = document.getElementById("chatInput");
+    const messages = document.getElementById("chatMessages");
+
+    const question = input.value.trim();
+    const wsid = document.getElementById("chat_wsid").value.trim();
+    const productId = document.getElementById("chat_productId").value.trim();
+
+    console.log("CHAT wsid:", wsid);
+    console.log("CHAT product_id:", productId);
+    console.log("CHAT question:", question);
+
+    if (!wsid || !productId) {
+        alert("Please enter Store ID and Product ID");
+        return;
+    }
+
+    if (!question) return;
+
+    // User bubble
+    const userDiv = document.createElement("div");
+    userDiv.className = "message user";
+    userDiv.innerText = question;
+    messages.appendChild(userDiv);
+
+    input.value = "";
+    messages.scrollTop = messages.scrollHeight;
+
+    // Typing indicator
+    const typingDiv = document.createElement("div");
+    typingDiv.className = "message bot";
+    typingDiv.innerText = "Typing...";
+    messages.appendChild(typingDiv);
+
+    try {
+        const response = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                wsid: wsid,
+                product_id: productId,
+                question: question
+            })
+        });
+
+        const data = await response.json();
+        typingDiv.remove();
+
+        const botDiv = document.createElement("div");
+        botDiv.className = "message bot";
+
+        /* Answer text */
+        const answerDiv = document.createElement("div");
+        answerDiv.innerText = data.answer || "No answer found.";
+        botDiv.appendChild(answerDiv);
+        
+        messages.appendChild(botDiv);
+
+        /* ===== Reviews OUTSIDE the bot bubble ===== */
+        if (data.reviews && data.reviews.length > 0) {
+
+            const btn = document.createElement("button");
+            btn.innerText = "Show reviews";
+            btn.className = "review-toggle-btn";
+
+            const reviewsDiv = document.createElement("div");
+            reviewsDiv.className = "review-container";
+            reviewsDiv.style.display = "none";
+
+            let html = "<strong>Reviews used:</strong>";
+
+            data.reviews.forEach(r => {
+                html += `
+                    <div class="review-item">
+                        <div class="review-rating">Rating: ${r.rating ?? "N/A"}</div>
+                        <div class="review-text">${r.review_text}</div>
+                    </div>
+                `;
+            });
+
+            reviewsDiv.innerHTML = html;
+
+            btn.onclick = () => {
+                const show = reviewsDiv.style.display === "none";
+                reviewsDiv.style.display = show ? "block" : "none";
+                btn.innerText = show ? "Hide reviews" : "Show reviews";
+            };
+
+            messages.appendChild(btn);
+            messages.appendChild(reviewsDiv);
+        }
+
+
+        messages.scrollTop = messages.scrollHeight;
+
+        messages.scrollTop = messages.scrollHeight;
+
+    } catch (err) {
+        typingDiv.innerText = "Error getting response.";
+        console.error(err);
+    }
+
+const chatInput = document.getElementById("chatInput");
+
+if (chatInput) {
+    chatInput.addEventListener("input", () => {
+        // reset height so it can shrink if needed
+        chatInput.style.height = "40px";
+
+        // grow up to max height
+        const newHeight = Math.min(chatInput.scrollHeight, 120);
+        chatInput.style.height = newHeight + "px";
+    });
+}
+
+}
+
+
 </script>
 
 

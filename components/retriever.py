@@ -121,25 +121,7 @@ def create_qa_chain(summary_type, wsid, product_id):
         logger.info("Loading LLM")
         llm = load_llm()
 
-        # Retrieve top 10 documents
-        # retriever = vectorstore.as_retriever(search_kwargs={"k": 100})
-        # filter_dict = {
-        #     # "WSID": wsid,
-        #     "product_id": f"{product_id}.0"
-        # }
 
-        # if summary_type == "positive":
-        #     filter_dict["rating"] = {"$gte": 4}
-
-        # elif summary_type == "negative":
-        #     filter_dict["rating"] = {"$lte": 3}
-
-        # retriever = vectorstore.as_retriever(
-        #   search_kwargs={
-        #       "k": 100,
-        #       "filter": filter_dict
-        #       })
-          
 
 
 
@@ -165,95 +147,7 @@ def create_qa_chain(summary_type, wsid, product_id):
             )
 
 
-        # def retrieve_context(_):
-        #     # docs = retriever.invoke("customer product review")
 
-        #     logger.info(f"Retrieved {len(docs)} docs for summary")
-
-        #     if not docs:
-        #         return {
-        #             "context": "",
-        #             "product_name": ""
-        #         }
-
-        #     product_name = docs[0].metadata.get("product_name", "This product")
-        #     context = "\n\n".join(d.page_content for d in docs)
-
-        #     return {
-        #         "context": context,
-        #         "product_name": product_name
-        #     }
-
-
-
-
-
-
-    #     def retrieve_context(_):
-    #         docs = retriever.invoke("reviews")
-
-    #         logger.info(f"Retrieved {len(docs)} docs for summary")
-
-    #         if not docs:
-    #             # 🚨 IMPORTANT: short-circuit with valid JSON
-    #             if summary_type in ["positive", "negative"]:
-    #                 return {
-    #                     "context": "",
-    #                     "product_name": ""
-    #                 }
-    #             else:
-    #                 return {
-    #                     "context": "",
-    #                     "product_name": "This product"
-    #                 }
-
-    #         product_name = docs[0].metadata.get("product_name", "This product")
-    #         context = "\n\n".join(d.page_content for d in docs)
-
-    #         return {
-    #             "context": context,
-    #             "product_name": product_name
-    # }
-
-        # def guard_empty_context(inputs):
-        #     if not inputs["context"].strip():
-        #         # ✅ Return valid JSON directly
-        #         if summary_type == "positive":
-        #             return {"topics": []}
-        #         elif summary_type == "negative":
-        #             return {"topics": []}
-        #         else:
-        #             return {"summary": "No reviews available for this product."}
-        #     return inputs
-        
-
-        # # docs = retriever.invoke("reviews")
-        # logger.info(f"Retrieved {len(docs)} docs for summary")
-        # if not docs:
-        #     logger.info("No reviews found, skipping LLM")
-
-        #     def empty_response(_):
-        #         if summary_type in ["positive", "negative"]:
-        #             return {"topics": []}
-        #         else:
-        #             return {"summary": "No reviews available for this product."}
-
-        #     return RunnableLambda(empty_response)
-
-        # # 🔹 BUILD CONTEXT FROM METADATA
-        # product_name = docs[0].metadata.get("product_name", "This product")
-        # context = "\n\n".join(
-        #     f"{d.metadata.get('review_title', '')} {d.metadata.get('review_text', '')}"
-        #     for d in docs
-        # )
-
-#         chain = (
-#           RunnableLambda(retrieve_context)|
-#           RunnableLambda(guard_empty_context)
-#           | prompt
-#           | llm
-#           | parser
-# )
         def format_docs(docs):
             reviews = []
 
@@ -279,37 +173,7 @@ def create_qa_chain(summary_type, wsid, product_id):
             }
 
         
-        # def fetch_reviews(_):
-        #     filter_dict = {
-        #     "WSID": str(wsid),
-        #     "product_id": f"{product_id}.0"
-        # }
 
-        #     # ✅ OPTIONAL: rating-based filtering
-        #     if summary_type == "positive":
-        #         filter_dict["rating"] = {"$gte": 4}
-        #     elif summary_type == "negative":
-        #         filter_dict["rating"] = {"$lte": 3}
-            
-        #     docs_debug = vectorstore.similarity_search(
-        #         query="test",
-        #         k=1
-        #     )
-
-        #     if docs_debug:
-        #         logger.info(f"PINECONE METADATA SAMPLE: {docs_debug[0].metadata}")
-
-
-        #     docs = vectorstore.similarity_search(
-        #         query="",          # metadata-only retrieval
-        #         k=50,              # increase for better coverage
-        #         filter=filter_dict
-        #     )
-
-        #     logger.info(
-        #         f"Retrieved {len(docs)} docs for wsid={wsid}, product_id={product_id}"
-        #     )
-        #     return docs
 
         def fetch_reviews(user_query: str):
 
@@ -326,10 +190,10 @@ def create_qa_chain(summary_type, wsid, product_id):
                 "WSID": str(wsid),          # ✅ EXACT key
                 "product_id": str(product_id)  # ✅ EXACT value
             }
-            if summary_type == "positive":
-                filter_dict["rating"] = {"$gte": 4}
-            elif summary_type == "negative":
-                filter_dict["rating"] = {"$lte": 3}
+            # if summary_type == "positive":
+            #     filter_dict["rating"] = {"$gte": 4}
+            # elif summary_type == "negative":
+            #     filter_dict["rating"] = {"$lte": 3}
 
             docs = vectorstore.similarity_search(
                 query=user_query,   # non-empty query is safer

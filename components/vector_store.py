@@ -3,13 +3,14 @@ from typing import List
 from pinecone import Pinecone  # type: ignore
 from langchain_core.embeddings import Embeddings
 from langchain_pinecone import PineconeVectorStore # type: ignore
-
+from dotenv import load_dotenv
 from common.custom_exception import CustomException
 from common.logger import get_logger
 from config.config import PINECONE_API_KEY, PINECONE_INDEX_NAME
 # -------------------------------------------------------------------------------------------------
 
 import os
+load_dotenv()
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 INDEX_NAME = "reviews"
@@ -180,7 +181,6 @@ def save_vector_store(text_chunks):
             raise CustomException("No text chunks provided to save to vector store.")
         
         logger.info(f"Uploading documents to Pinecone index: {PINECONE_INDEX_NAME}")
-        
         # Use our custom embedding class
         embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
