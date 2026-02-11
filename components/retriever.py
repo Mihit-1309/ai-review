@@ -34,6 +34,9 @@ Style:
 - Start with "Customers say..."
 - Be neutral and informative
 
+User Question:
+{question}
+
 Context:
 {context}
 
@@ -68,7 +71,8 @@ OUTPUT FORMAT (STRICT JSON ONLY):
     }}
   ]
 }}
-
+User Question:
+{question}
 
 Context:
 {context}
@@ -97,7 +101,8 @@ OUTPUT FORMAT (STRICT JSON ONLY):
     }}
   ]
 }}
-
+User Question:
+{question}
 
 Context:
 {context}
@@ -138,12 +143,12 @@ def create_qa_chain(summary_type, wsid, product_id):
         if summary_type == "neutral":
             prompt = PromptTemplate(
                 template=selected_prompt,
-                input_variables=["context"]
+                input_variables=["context","question"]
             )
         else:
             prompt = PromptTemplate(
                 template=selected_prompt,
-                input_variables=["context", "product_name"]
+                input_variables=["context", "product_name","question"]
             )
 
 
@@ -215,13 +220,26 @@ def create_qa_chain(summary_type, wsid, product_id):
 
 
 
+        # chain = (
+        #     RunnableLambda(lambda user_query: fetch_reviews(user_query))
+        #     | RunnableLambda(format_docs)
+        #     | prompt
+        #     | llm
+        #     | parser
+        # )
+        def retrieval_pipeline(user_query: str):
+            docs = fetch_reviews(user_query)
+            formatted = format_docs(docs)
+            formatted["question"] = user_query
+            return formatted
+
         chain = (
-            RunnableLambda(lambda user_query: fetch_reviews(user_query))
-            | RunnableLambda(format_docs)
+            RunnableLambda(retrieval_pipeline)
             | prompt
             | llm
             | parser
         )
+
 
 
 
