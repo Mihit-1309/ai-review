@@ -414,7 +414,10 @@
 
 <script>
     let topicData = [];
-
+// Clear session every time page loads
+window.addEventListener("load", function() {
+    fetch("/reset-session", { method: "POST" });
+});
 
 function showTab(tab) {
     document.getElementById("summaryTab").style.display = "none";
@@ -423,6 +426,31 @@ function showTab(tab) {
     document.getElementById(tab).style.display = "block";
 }
 
+// ===============================
+// CHAT INPUT CONTROLS (Enter to send)
+// ===============================
+
+const chatInput = document.getElementById("chatInput");
+
+if (chatInput) {
+
+    // 🔹 Auto resize textarea
+    chatInput.addEventListener("input", () => {
+        chatInput.style.height = "40px";
+        const newHeight = Math.min(chatInput.scrollHeight, 120);
+        chatInput.style.height = newHeight + "px";
+    });
+
+    // 🔹 Enter to Send | Shift+Enter for new line
+    chatInput.addEventListener("keydown", function (event) {
+
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();  // stop new line
+            sendMessage();           // send message
+        }
+
+    });
+}
 
 async function submitReview() {
     const wsid = document.getElementById("new_wsid").value.trim();
@@ -792,18 +820,18 @@ async function sendMessage() {
         console.error(err);
     }
 
-const chatInput = document.getElementById("chatInput");
+// const chatInput = document.getElementById("chatInput");
 
-if (chatInput) {
-    chatInput.addEventListener("input", () => {
-        // reset height so it can shrink if needed
-        chatInput.style.height = "40px";
+// if (chatInput) {
+//     chatInput.addEventListener("input", () => {
+//         // reset height so it can shrink if needed
+//         chatInput.style.height = "40px";
 
-        // grow up to max height
-        const newHeight = Math.min(chatInput.scrollHeight, 120);
-        chatInput.style.height = newHeight + "px";
-    });
-}
+//         // grow up to max height
+//         const newHeight = Math.min(chatInput.scrollHeight, 120);
+//         chatInput.style.height = newHeight + "px";
+//     });
+// }
 
 }
 

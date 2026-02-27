@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 from itertools import islice
 from components.topics.processor import process_new_reviews
 from components.database import topic_store
@@ -11,8 +11,13 @@ from components.vector_store import load_vector_store
 from components.database import reviews_collection
 logger = get_logger(__name__)
 from components.chatbot.chain import chat_with_reviews
+from flask import session
+import uuid
+
 
 app = Flask(__name__)
+app.secret_key = "dev-secret-key-123"
+
 
 
 # ===============================
@@ -138,21 +143,7 @@ def ask():
 
         logger.info("Running QA chain")
 
-        # ✅ PASS STRING ONLY (CRITICAL FIX)
 
-        # result = qa_chain.invoke(question)
-        # # result = qa_chain.invoke({})
-
-        # # ✅ Handle both string & dict outputs safely
-        # if isinstance(result, dict):
-        #     answer = result.get("result") or result.get("answer", "")
-        # else:
-        #     answer = result
-
-        # # return jsonify({
-        # #     "answer": answer
-        # # })
-        # return jsonify(result)
         result = qa_chain.invoke(question)
 
         response = {
@@ -162,7 +153,7 @@ def ask():
         logger.info(f"RAW LLM RESULT: {result}")
         if summary_type == "neutral":
 
-    # 🔹 If LLM returned STRING (StrOutputParser)
+            # 🔹 If LLM returned STRING (StrOutputParser)
             if isinstance(result, str):
                 response["answer"] = result.strip()
 
@@ -183,36 +174,7 @@ def ask():
                     if t.get("summary") and t["summary"].strip()
                 ]
 
-    #             ]
-    #     if isinstance(result, dict):
-
-    # # -------- NEUTRAL --------
-    #         if "summary" in result:
-    #             summary = result.get("summary", "").strip()
-
-    #             # If LLM refused or returned empty → retry once
-    #             # if (
-    #             #     not summary
-    #             #     or "no review" in summary.lower()
-    #             #     or "can't generate" in summary.lower()
-    #             #     or "insufficient" in summary.lower()
-    #             # ):
-    #             #     # retry neutral generation once
-    #             #     result_retry = qa_chain.invoke("reviews")
-    #             #     summary = result_retry.get("summary", "").strip()
-
-    #             response["answer"] = summary
-
-    #         # -------- POSITIVE / NEGATIVE --------
-    #         elif "topics" in result:
-    #             response["topics"] = [
-    #                 t for t in result["topics"]
-    #                 if t.get("summary") and t["summary"].strip()
-    #         ]
-
-
-    #     else:
-    #         response["answer"] = result
+  
 
         return jsonify(response)
 
@@ -223,33 +185,7 @@ def ask():
         }), 500
     
 
-# @app.route("/topics/top", methods=["POST"])
-# def get_top_topics():
-#     try:
-#         data = request.get_json(force=True)
-#         WSID = data.get("WSID")
-#         product_id = data.get("product_id")
 
-#         if not WSID or not product_id:
-#             return jsonify({"error": "WSID and product_id required"}), 400
-
-#         # Incremental update from Pinecone
-#         process_new_reviews(WSID, product_id)
-
-#         # Top-10 topics for THIS product ONLY
-#         topics = list(
-#             topic_store.find(
-#                 {"WSID": WSID, "product_id": product_id},
-#                 {"_id": 0, "topic": 1, "count": 1}
-#             )
-#             .sort("count", -1)
-#             .limit(10)
-#         )
-
-#         return jsonify({"topics": topics})
-
-#     except Exception as e:
-#         return jsonify({"error": "Failed to fetch topics"}), 500
 @app.route("/topics/top", methods=["POST"])
 def get_top_topics():
     try:
@@ -326,14 +262,50 @@ def get_reviews_by_topic():
 def chat():
     data = request.get_json(force=True)
 
-    return jsonify(
-        chat_with_reviews(
-            wsid=data.get("wsid"),
-            product_id=data.get("product_id"),
-            question=data.get("question")
-        )
+    wsid = data.get("wsid")
+    product_id = data.get("product_id")
+    question = data.get("question")
+
+    if not wsid or not product_id or not question:
+        return jsonify({"error": "Missing parameters"}), 400
+
+    # -------------------------------------
+    # Create session ID (per browser session)
+    # -------------------------------------
+
+    if "chat_history" not in session:
+        # session["chat_id"] = str(uuid.uuid4())
+        session["chat_history"] = []
+
+    chat_history = session["chat_history"]
+
+    # Call chatbot
+    response = chat_with_reviews(
+        wsid=wsid,
+        product_id=product_id,
+        question=question,
+        chat_history=chat_history
     )
 
+    # Store conversation
+    chat_history.append({
+        "role": "user",
+        "content": question
+    })
+    chat_history.append({
+        "role": "assistant",
+        "content": response["answer"]
+    })
+
+    session["chat_history"] = chat_history
+
+    return jsonify(response)
+
+
+@app.route("/reset-session", methods=["POST"])
+def reset_session():
+    session.clear()
+    return jsonify({"status": "session cleared"})
 
 
 
