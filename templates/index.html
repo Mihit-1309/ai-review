@@ -2,844 +2,1120 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Product Review Summary</title>
+    <title>ReviewMind — AI Review Intelligence</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --bg:        #0d0d10;
+            --surface:   #14141a;
+            --surface2:  #1c1c25;
+            --border:    #2a2a38;
+            --border2:   #383848;
+            --accent:    #f0a500;
+            --accent2:   #e08800;
+            --text:      #e8e4dc;
+            --muted:     #8a8799;
+            --muted2:    #5a5768;
+            --green:     #34d399;
+            --red:       #f87171;
+            --blue:      #60a5fa;
+            --radius:    12px;
+            --radius-lg: 18px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         html, body {
             height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-        }
-
-
-        .container {
-            width: 100%;
+        /* ─── Layout ─────────────────────────────────── */
+        .shell {
+            display: flex;
             height: 100vh;
-            margin: 0;
-            background: white;
-            padding: 24px 40px;
-            box-sizing: border-box;
+            overflow: hidden;
         }
 
-        h1 {
+        /* ─── Sidebar ────────────────────────────────── */
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+        }
+
+        .logo {
+            padding: 0 20px 28px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .logo-mark {
+            font-family: 'DM Serif Display', serif;
+            font-size: 20px;
+            color: var(--text);
+            letter-spacing: -0.3px;
+        }
+
+        .logo-mark span { color: var(--accent); }
+
+        .logo-sub {
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted2);
+            margin-top: 2px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted2);
+            padding: 0 20px;
+            margin-bottom: 6px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            width: 100%;
+            text-align: left;
+            border-radius: 0;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .nav-btn:hover { color: var(--text); background: var(--surface2); }
+
+        .nav-btn.active {
+            color: var(--accent);
+            background: rgba(240,165,0,0.07);
+        }
+
+        .nav-btn.active::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
+            background: var(--accent);
+            border-radius: 0 2px 2px 0;
+        }
+
+        .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+
+        /* ─── Main ───────────────────────────────────── */
+        .main {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ─── Topbar ─────────────────────────────────── */
+        .topbar {
+            height: 56px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 28px;
+            gap: 16px;
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+
+        .topbar-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 17px;
+            color: var(--text);
+        }
+
+        .topbar-pill {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 99px;
+            background: rgba(240,165,0,0.12);
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* ─── Content area ───────────────────────────── */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px;
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ─── Credentials bar ────────────────────────── */
+        .creds {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 14px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            align-items: center;
+        }
+
+        .creds-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            color: var(--muted2);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        /* ─── Inputs ─────────────────────────────────── */
+        input, textarea {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            padding: 10px 14px;
+            outline: none;
+            transition: border-color 0.15s;
+            width: 100%;
+        }
+
+        input:focus, textarea:focus { border-color: var(--accent); }
+        input::placeholder, textarea::placeholder { color: var(--muted2); }
+
+        .field-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .field-row input { flex: 1; }
+
+        /* ─── Buttons ────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: var(--radius);
+            border: none;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+        .btn-primary:hover { background: var(--accent2); }
+
+        .btn-ghost {
+            background: var(--surface2);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+        .btn-green { background: rgba(52,211,153,0.1); color: var(--green); border: 1px solid rgba(52,211,153,0.25); }
+        .btn-green:hover { background: rgba(52,211,153,0.18); }
+
+        .btn-red { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.25); }
+        .btn-red:hover { background: rgba(248,113,113,0.18); }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        /* ─── Cards ──────────────────────────────────── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 16px;
+            color: var(--text);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ─── Textarea (question) ────────────────────── */
+        .question-area {
+            min-height: 90px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        /* ─── Summary output ─────────────────────────── */
+        .summary-output {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            margin-top: 16px;
+            line-height: 1.7;
+            color: var(--text);
+            font-size: 14px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .summary-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
             margin-bottom: 10px;
         }
 
-        .subtitle {
-            color: #555;
-            margin-bottom: 25px;
-        }
+        /* ─── Topic buttons ──────────────────────────── */
+        #topicButtons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 
-        textarea {
-            width: 100%;
-            min-height: 120px;
-            padding: 15px;
-            font-size: 15px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            resize: vertical;
-        }
-
-        button {
-            margin-top: 20px;
-            padding: 12px 25px;
-            font-size: 16px;
-            background-color: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 8px;
+        #topicButtons button {
+            padding: 7px 14px;
+            border-radius: 99px;
+            border: 1px solid var(--border2);
+            background: var(--surface2);
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
             cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #1e40af;
-        }
-
-        .output {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f9fafb;
-            border-left: 5px solid #2563eb;
-            border-radius: 8px;
-            display: none;
-        }
-
-        .output h3 {
+            transition: all 0.15s;
+            width: auto;
             margin-top: 0;
         }
 
-        .loader {
-            position: absolute;
-            top: 120px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            background: rgba(255,255,255,0.8);
-            padding: 10px;
-            display: none;
-            z-index: 999;
-        }
+        #topicButtons button:hover { border-color: var(--accent); color: var(--accent); }
+        #topicButtons button.active-topic { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
 
+        /* ─── Topic list ─────────────────────────────── */
+        #topicList { list-style: none; display: flex; flex-direction: column; gap: 6px; }
 
-        footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 13px;
-            color: #777;
+        #topicList li {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 14px;
+            transition: border-color 0.15s;
         }
-        .active-topic {
-           background-color: #00030b;
-        }
+        #topicList li:hover { border-color: var(--border2); }
+
         .topic-link {
-            color: #151515;
+            color: var(--text);
             cursor: pointer;
-            padding: 3px 6px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
         }
-        .topic-link:hover {
-            text-decoration: underline;
-        }
+        .topic-link:hover { color: var(--accent); }
 
-        #topicBox, #topicList, .topic-link {
-            background: none; /* highlight click area */
-        }
-
-        #reviewsContent ul {
-            padding-left: 20px;
-        }
-
-        #reviewsContent li {
-            padding: 8px;
-            background: #f1f5f9;
-            border-radius: 8px;
+        .topic-count {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--muted2);
+            background: var(--surface);
+            padding: 2px 8px;
+            border-radius: 99px;
         }
 
-        /* ================= CHATBOT UI ================= */
+        /* ─── Reviews list ───────────────────────────── */
+        .review-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 
-        .chat-container {
+        .review-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .review-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .stars { color: var(--accent); font-size: 12px; letter-spacing: 1px; }
+        .stars.low { color: var(--red); }
+
+        .review-card-text { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+        /* ─── Loader ─────────────────────────────────── */
+        .loader-wrap {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .loader-wrap.active { display: flex; }
+
+        .dots { display: flex; gap: 4px; }
+        .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: bounce 1.2s ease-in-out infinite;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        /* ─── Add Review form ────────────────────────── */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--muted2);
+            margin-bottom: 5px;
+        }
+
+        .star-picker { display: flex; gap: 6px; margin-top: 4px; }
+
+        .star-btn {
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--border2);
+            background: none;
+            border: none;
+            padding: 0;
+            transition: color 0.1s, transform 0.1s;
+            width: auto;
+            margin-top: 0;
+        }
+        .star-btn:hover, .star-btn.lit { color: var(--accent); }
+        .star-btn:hover { transform: scale(1.2); }
+
+        .status-msg {
+            padding: 10px 14px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            margin-top: 12px;
+            display: none;
+        }
+        .status-msg.ok { background: rgba(52,211,153,0.1); color: var(--green); border: 1px solid rgba(52,211,153,0.25); }
+        .status-msg.err { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.25); }
+
+        /* ─── Chat ───────────────────────────────────── */
+        .chat-wrap {
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 260px); /* adjusts for header & inputs */
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            background: #fafafa;
+            height: calc(100vh - 56px - 56px - 80px); /* topbar + creds + padding */
+            min-height: 400px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
         }
 
         .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            padding: 20px;
-            overflow-y: auto;
+            gap: 4px;
         }
 
-
-        .chat-input {
-            display: flex !important;
-            align-items: center !important;
-            gap: 12px;
-            padding: 10px 14px;
-            border-top: 1px solid #e5e7eb;
-            background: white;
-        }
-
-        .chat-input textarea {
-            flex: 1;
-            height: 40px !important;
-            min-height: 40px !important;
-            max-height: 120px;
-            resize: none;
-            padding: 8px 12px;
-            font-size: 14px;
-            line-height: 1.4;
-            border-radius: 10px;
-            box-sizing: border-box;
-            display: block;
-        }
-
-
-        .message {
-            max-width: 65%;
-            padding: 12px 16px;
+        .msg {
+            max-width: 68%;
+            padding: 11px 15px;
             border-radius: 14px;
-            margin-bottom: 12px;
-            line-height: 1.5;
+            line-height: 1.6;
+            font-size: 13.5px;
             white-space: pre-wrap;
             word-wrap: break-word;
+            animation: fadeIn 0.2s ease;
         }
 
-        .message.user {
-            background: #2563eb;
-            color: white;
+        .msg.user {
+            background: var(--accent);
+            color: #000;
             align-self: flex-end;
-            text-align: left;
             border-bottom-right-radius: 4px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            font-weight: 500;
+            margin-bottom: 10px;
         }
 
-        .message.bot {
-            background: #e5e7eb;
-            color: #111;
+        .msg.bot {
+            background: var(--surface2);
+            color: var(--text);
             align-self: flex-start;
-            text-align: left;
             border-bottom-left-radius: 4px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            border: 1px solid var(--border);
+            margin-bottom: 4px;
         }
 
+        .msg.typing { color: var(--muted); font-style: italic; }
 
-        .sources {
-            margin-top: 8px;
-            font-size: 13px;
-            background: #f9fafb;
-            padding: 8px;
-            border-radius: 6px;
+        .review-toggle-btn {
+            align-self: flex-start;
+            margin-bottom: 10px;
+            padding: 5px 14px;
+            border-radius: 99px;
+            background: transparent;
+            border: 1px solid var(--border2);
+            color: var(--muted);
+            font-size: 12px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            transition: all 0.15s;
+            width: auto;
+            margin-top: 0;
         }
+        .review-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .review-container {
+            align-self: flex-start;
+            width: 68%;
+            margin-bottom: 12px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .chat-input-bar {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+        }
+
         #chatInput {
             flex: 1;
-            resize: none;
             height: 40px;
             min-height: 40px;
-            max-height: 120px;          /* 🔥 max growth (3 lines approx) */
-            padding: 8px 12px;
-            font-size: 14px;
-            line-height: 1.4;
+            max-height: 120px;
+            resize: none;
+            overflow-y: hidden;
             border-radius: 10px;
-            box-sizing: border-box;
-            overflow-y: hidden;         /* no scrollbar until max */
+            padding: 9px 14px;
+            font-size: 13px;
+            line-height: 1.4;
         }
 
         #sendBtn {
             height: 40px;
-            padding: 0 18px;
-            font-size: 14px;
+            padding: 0 20px;
             border-radius: 10px;
-            background: #2563eb;
-            color: white;
+            background: var(--accent);
+            color: #000;
             border: none;
             cursor: pointer;
-            white-space: nowrap;
-        }
-
-        #sendBtn:hover {
-            background: #1e40af;
-        }
-
-        .chat-input button {
-            margin-top: 0 !important;   /* 🔥 THIS FIXES IT */
-            height: 40px;
-            padding: 0 18px;
-            font-size: 14px;
-            border-radius: 10px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        /* ===== Review list inside chatbot ===== */
-
-       .review-item {
-            display: inline-block;
-            width: 100%;
-            padding: 8px 10px;
-            margin-bottom: 6px;
-            background: #f1f5f9;
-            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
             font-size: 13px;
-            line-height: 1.4;
-        }
-
-        .review-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .review-item * {
-            margin: 0 !important;
-            padding: 0;
-        }
-
-        .review-rating {
             font-weight: 600;
-            margin-bottom: 2px !important;
+            transition: background 0.15s;
+            white-space: nowrap;
+            width: auto;
+            margin-top: 0;
+            flex-shrink: 0;
         }
+        #sendBtn:hover { background: var(--accent2); }
 
-        .review-text {
-            line-height: 1.4;
-        }
-        .review-container {
-            margin: 6px 0 12px 0;
-            padding: 8px 10px;
-            background: #f9fafb;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-        /* Small inline button (used for Show/Hide reviews) */
-        .review-toggle-btn {
-            margin-top: 6px;
-            padding: 6px 14px;
-            font-size: 13px;
-            border-radius: 10px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            cursor: pointer;
-            width: auto;          /* 🔥 NOT full width */
-            display: inline-block;
-            align-self: flex-start; 
-        }
+        /* ─── Scrollbar ──────────────────────────────── */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted2); }
 
-        .review-toggle-btn:hover {
-            background: #1e40af;
+        /* ─── Animations ─────────────────────────────── */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes bounce { 0%,80%,100% { transform: scale(0.7); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
+
+        /* ─── Empty state ────────────────────────────── */
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted2);
         }
+        .empty-icon { font-size: 36px; margin-bottom: 12px; }
+        .empty-text { font-size: 13px; }
+
+        /* ─── Divider ────────────────────────────────── */
+        .divider { height: 1px; background: var(--border); margin: 20px 0; }
 
     </style>
 </head>
 
 <body>
+<div class="shell">
 
-<div class="container">
-
-    <!-- TAB BUTTONS -->
-    <button onclick="showTab('summaryTab')">Summary</button>
-    <button onclick="showTab('addReviewTab')">Add Review</button>
-    <button onclick="showTab('chatTab')">Chatbot</button>
-    <!-- ================= SUMMARY TAB ================= -->
-    <div id="summaryTab" style="display:block;">
-
-        <h1>Customer Review Summary</h1>
-        <p class="subtitle"><strong>“Customers say”</strong> summary based on product reviews</p>
-
-        <textarea id="questionInput" placeholder="Ask about customer opinions..."></textarea>
-
-        <div>Store ID:</div>
-        <input id="wsid" placeholder="Enter Store ID" /><br><br>
-
-        <div>Product ID:</div>
-        <input id="productId" placeholder="Enter Product ID" /><br>
-
-        <button onclick="generateSummary('neutral')">Generate Summary</button>
-        <button onclick="generateSummary('positive')">Positive AI Summary</button>
-        <button onclick="generateSummary('negative')">Negative AI Summary</button>
-        <button onclick="generateTopics()">Generate Top Topics</button>
-
-        <div class="output" id="topicBox">
-            <h3>Top Topics</h3>
-            <ul id="topicList"></ul>
-        </div>
-        <div class="output" id="reviewsBox" style="display:none;">
-         <h3>Reviews for selected topic</h3>
-         <div id="reviewsContent"></div>
+    <!-- ═══ SIDEBAR ════════════════════════════════ -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-mark">Review<span>Mind</span></div>
+            <div class="logo-sub">AI Intelligence</div>
         </div>
 
-        <div class="loader" id="loader">Generating summary...</div>
+        <div class="nav-label">Navigation</div>
+        <button class="nav-btn active" onclick="showTab('summaryTab', this)">
+            <span class="nav-icon">◈</span> Summary
+        </button>
+        <button class="nav-btn" onclick="showTab('addReviewTab', this)">
+            <span class="nav-icon">✦</span> Add Review
+        </button>
+        <button class="nav-btn" onclick="showTab('chatTab', this)">
+            <span class="nav-icon">◎</span> Chatbot
+        </button>
+    </aside>
 
-        <div class="output" id="summaryBox" style="display:none;">
-            <h3>Customers say</h3>
-            <div id="topicButtons"></div>
-            <div id="topicSummary" style="display:none;">
-                <p id="summaryText"></p>
+    <!-- ═══ MAIN ════════════════════════════════════ -->
+    <div class="main">
+
+        <!-- Topbar -->
+        <div class="topbar" id="topbarEl">
+            <div class="topbar-title">Summary</div>
+            <div class="topbar-pill">Review Analysis</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+
+            <!-- ══ SUMMARY TAB ══════════════════════ -->
+            <div id="summaryTab" class="tab-panel active">
+
+                <!-- Credentials -->
+                <div class="creds">
+                    <span class="creds-label">Workspace</span>
+                    <input id="wsid" placeholder="Store ID" style="max-width:160px;" />
+                    <input id="productId" placeholder="Product ID" style="max-width:160px;" />
+                </div>
+
+                <div class="card">
+                    <div class="card-title">⬡ Ask a Question</div>
+                    <textarea id="questionInput" class="question-area" placeholder="e.g. What do customers say about print quality?"></textarea>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="generateSummary('neutral')">◈ Neutral Summary</button>
+                        <button class="btn btn-green" onclick="generateSummary('positive')">↑ Positive Topics</button>
+                        <button class="btn btn-red" onclick="generateSummary('negative')">↓ Negative Topics</button>
+                        <button class="btn btn-ghost" onclick="generateTopics()">⊞ Top Topics</button>
+                    </div>
+                </div>
+
+                <!-- Loader -->
+                <div class="loader-wrap" id="loader">
+                    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                    <span>Analysing reviews…</span>
+                </div>
+
+                <!-- Summary output -->
+                <div class="summary-output" id="summaryBox">
+                    <div class="summary-label">Customers say</div>
+                    <div id="topicButtons"></div>
+                    <div id="topicSummary" style="display:none;">
+                        <p id="summaryText" style="color:var(--text);line-height:1.7;"></p>
+                    </div>
+                </div>
+
+                <!-- Top topics output -->
+                <div class="summary-output" id="topicBox" style="border-left-color:var(--blue);">
+                    <div class="summary-label" style="color:var(--blue);">Top Topics</div>
+                    <ul id="topicList"></ul>
+                </div>
+
+                <!-- Reviews for topic -->
+                <div class="summary-output" id="reviewsBox" style="border-left-color:var(--muted2); display:none;">
+                    <div class="summary-label" style="color:var(--muted);">Reviews for Topic</div>
+                    <div id="reviewsContent"></div>
+                </div>
+
             </div>
-        </div>
 
-        <div class="output" id="wordsBox" style="display:none;">
-            <h3>Top discussed words</h3>
-            <ul id="wordsList"></ul>
-        </div>
+            <!-- ══ ADD REVIEW TAB ═══════════════════ -->
+            <div id="addReviewTab" class="tab-panel">
 
-    </div>
+                <div class="card">
+                    <div class="card-title">✦ New Review</div>
 
-    <!-- ================= ADD REVIEW TAB ================= -->
-    <div id="addReviewTab" style="display:none;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Store ID</label>
+                            <input id="new_wsid" placeholder="e.g. STORE_001" />
+                        </div>
+                        <div class="form-group">
+                            <label>Product ID</label>
+                            <input id="new_productId" placeholder="e.g. PROD_042" />
+                        </div>
+                        <div class="form-group">
+                            <label>Product Name</label>
+                            <input id="product_name" placeholder="e.g. AuraBeat Pro" />
+                        </div>
+                        <div class="form-group">
+                            <label>Rating</label>
+                            <div class="star-picker" id="starPicker">
+                                <button class="star-btn" data-val="1" onclick="setRating(1)">★</button>
+                                <button class="star-btn" data-val="2" onclick="setRating(2)">★</button>
+                                <button class="star-btn" data-val="3" onclick="setRating(3)">★</button>
+                                <button class="star-btn" data-val="4" onclick="setRating(4)">★</button>
+                                <button class="star-btn" data-val="5" onclick="setRating(5)">★</button>
+                            </div>
+                            <input type="hidden" id="rating" value="0" />
+                        </div>
+                    </div>
 
-        <h1>Add Review</h1>
-        <p class="subtitle">Insert new customer reviews into MongoDB</p>
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label>Review Text</label>
+                        <textarea id="newReviewText" style="min-height:110px;resize:vertical;" placeholder="Write the customer review…"></textarea>
+                    </div>
 
-        <div>Store ID:</div>
-        <input id="new_wsid" placeholder="Store ID" /><br><br>
+                    <button class="btn btn-primary" onclick="submitReview()">✦ Submit Review</button>
 
-        <div>Product ID:</div>
-        <input id="new_productId" placeholder="Product ID" /><br><br>
-        <div>Product Name:</div>
-        <input id="product_name" placeholder="Product Name" /><br><br>
+                    <div class="status-msg" id="reviewStatus"></div>
+                </div>
 
-        <div>Rating:</div>
-        <input id="rating" type="number" min="1" max="5" placeholder="1-5" /><br><br>
-
-
-        <div>Review text:</div>
-        <textarea id="newReviewText" placeholder="Write customer review..."></textarea><br>
-
-        <button onclick="submitReview()">Submit Review</button>
-
-        <div id="reviewStatus" style="margin-top:10px;color:green;"></div>
-    </div>
-
-    <!-- ================= CHATBOT TAB ================= -->
-    <div id="chatTab" style="display:none;">
-
-        <h1>Review Chatbot</h1>
-        <p class="subtitle">
-            Ask questions and get answers grounded in customer reviews
-        </p>
-
-        <div>Store ID:</div>
-        <input id="chat_wsid" placeholder="Enter Store ID" /><br><br>
-
-        <div>Product ID:</div>
-        <input id="chat_productId" placeholder="Enter Product ID" /><br>
-
-        <div class="chat-container">
-            <div id="chatMessages" class="chat-messages"></div>
-
-            <div class="chat-input">
-                <textarea
-                    id="chatInput"
-                    rows = "1"
-                    placeholder="Ask something like: What do customers say about battery life?"
-                ></textarea>
-                <button id="sendBtn" onclick="sendMessage()">Send</button>
             </div>
-        </div>
-    </div>
 
+            <!-- ══ CHAT TAB ════════════════════════ -->
+            <div id="chatTab" class="tab-panel">
 
+                <!-- Credentials -->
+                <div class="creds">
+                    <span class="creds-label">Workspace</span>
+                    <input id="chat_wsid" placeholder="Store ID" style="max-width:160px;" />
+                    <input id="chat_productId" placeholder="Product ID" style="max-width:160px;" />
+                </div>
 
-</div>
+                <div class="chat-wrap">
+                    <div id="chatMessages" class="chat-messages">
+                        <div class="empty">
+                            <div class="empty-icon">◎</div>
+                            <div class="empty-text">Ask anything about this product's reviews</div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-bar">
+                        <textarea
+                            id="chatInput"
+                            rows="1"
+                            placeholder="e.g. What do customers say about battery life?"
+                        ></textarea>
+                        <button id="sendBtn" onclick="sendMessage()">Send ↑</button>
+                    </div>
+                </div>
+
+            </div>
+        </div><!-- /content -->
+    </div><!-- /main -->
+</div><!-- /shell -->
 
 
 <script>
+    // ─── State ──────────────────────────────────────
     let topicData = [];
-// Clear session every time page loads
-window.addEventListener("load", function() {
-    fetch("/reset-session", { method: "POST" });
-});
+    let selectedRating = 0;
 
-function showTab(tab) {
-    document.getElementById("summaryTab").style.display = "none";
-    document.getElementById("addReviewTab").style.display = "none";
-    document.getElementById("chatTab").style.display = "none";
-    document.getElementById(tab).style.display = "block";
-}
-
-// ===============================
-// CHAT INPUT CONTROLS (Enter to send)
-// ===============================
-
-const chatInput = document.getElementById("chatInput");
-
-if (chatInput) {
-
-    // 🔹 Auto resize textarea
-    chatInput.addEventListener("input", () => {
-        chatInput.style.height = "40px";
-        const newHeight = Math.min(chatInput.scrollHeight, 120);
-        chatInput.style.height = newHeight + "px";
-    });
-
-    // 🔹 Enter to Send | Shift+Enter for new line
-    chatInput.addEventListener("keydown", function (event) {
-
-        if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();  // stop new line
-            sendMessage();           // send message
-        }
-
-    });
-}
-
-async function submitReview() {
-    const wsid = document.getElementById("new_wsid").value.trim();
-    const productId = document.getElementById("new_productId").value.trim();
-    const reviewText = document.getElementById("newReviewText").value.trim();
-
-    if (!wsid || !productId || !reviewText) {
-        alert("Store ID, Product ID and Review are required!");
-        return;
-    }
-
-    const rating = Number(document.getElementById("rating").value);
-
-    if (!rating || rating < 1 || rating > 5) {
-    alert("Rating must be between 1 and 5");
-    return;
-    }
-
-
-    const body = {
-        review_id: generateUUID(),
-        wsid: wsid,
-        product_id: productId,
-        product_name: document.getElementById("product_name").value,
-        rating: Number(document.getElementById("rating").value),
-        review_text: reviewText,
-        embedded: false
+    const TAB_TITLES = {
+        summaryTab:   ['Summary',    'Review Analysis'],
+        addReviewTab: ['Add Review', 'Submit Feedback'],
+        chatTab:      ['Chatbot',    'Ask Your Reviews'],
     };
 
-    try {
-        const res = await fetch("/reviews", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-            document.getElementById("reviewStatus").innerText =
-                "Review submitted successfully!";
-            document.getElementById("newReviewText").value = "";
-        } else {
-            alert("Error: " + (data.error || "Unknown Error"));
-        }
-
-    } catch (err) {
-        console.error(err);
-        alert("Failed to connect to server");
-    }
-}
-
-
-
-function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
+    // ─── Session reset on load ───────────────────────
+    window.addEventListener("load", () => {
+        fetch("/reset-session", { method: "POST" });
     });
-}
 
+    // ─── Tab switching ───────────────────────────────
+    function showTab(tabId, btn) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if (btn) btn.classList.add('active');
 
-
-
-
-async function generateSummary(type) {
-    const question = document.getElementById("questionInput").value.trim();
-    const summaryBox = document.getElementById("summaryBox");
-    const summaryText = document.getElementById("summaryText");
-    const loader = document.getElementById("loader");
-
-
-    
-    if (type !== "neutral" && !question) {
-        alert("Please enter a question for this summary type.");
-        return;
+        const [title, pill] = TAB_TITLES[tabId] || ['', ''];
+        document.getElementById('topbarEl').querySelector('.topbar-title').textContent = title;
+        document.getElementById('topbarEl').querySelector('.topbar-pill').textContent = pill;
     }
 
-    loader.style.display = "block";
-    summaryBox.style.display = "none";
-
-    try {
-        const response = await fetch("/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                question: question,
-                wsid: document.getElementById("wsid").value,
-                product_id: document.getElementById("productId").value,
-                summary_type: type
-            })
+    // ─── Star picker ─────────────────────────────────
+    function setRating(val) {
+        selectedRating = val;
+        document.getElementById('rating').value = val;
+        document.querySelectorAll('.star-btn').forEach(b => {
+            b.classList.toggle('lit', parseInt(b.dataset.val) <= val);
         });
+    }
 
-        const data = await response.json();
+    // ─── Chat input auto-resize + Enter to send ──────
+    const chatInput = document.getElementById("chatInput");
+    if (chatInput) {
+        chatInput.addEventListener("input", () => {
+            chatInput.style.height = "40px";
+            chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + "px";
+        });
+        chatInput.addEventListener("keydown", e => {
+            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        });
+    }
 
-        // 🔹 Neutral summary
-        // Neutral summary
-        if (type === "neutral") {
-            document.getElementById("topicButtons").innerHTML = "";
+    // ─── Submit Review ───────────────────────────────
+    async function submitReview() {
+        const wsid      = document.getElementById("new_wsid").value.trim();
+        const productId = document.getElementById("new_productId").value.trim();
+        const reviewText= document.getElementById("newReviewText").value.trim();
+        const rating    = parseInt(document.getElementById("rating").value);
+        const statusEl  = document.getElementById("reviewStatus");
 
-            summaryText.innerText =
-                data.answer || "No summary available.";
-
-            document.getElementById("topicSummary").style.display = "block";
-            document.getElementById("summaryBox").style.display = "block";
-
+        if (!wsid || !productId || !reviewText) {
+            showStatus("Store ID, Product ID and Review text are required.", false);
+            return;
+        }
+        if (!rating || rating < 1 || rating > 5) {
+            showStatus("Please select a star rating (1–5).", false);
             return;
         }
 
+        const body = {
+            review_id:    generateUUID(),
+            wsid:         wsid,
+            product_id:   productId,
+            product_name: document.getElementById("product_name").value.trim(),
+            rating:       rating,
+            review_text:  reviewText,
+            embedded:     false
+        };
 
-        // 🔹 Positive / Negative topic-wise
-        topicData = data.topics || [];
+        try {
+            const res  = await fetch("/reviews", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
 
-        const buttonsContainer = document.getElementById("topicButtons");
-        buttonsContainer.innerHTML = "";
-        summaryText.innerText = "";
-        document.getElementById("topicSummary").style.display = "none";
-
-        topicData.forEach((item, index) => {
-            const btn = document.createElement("button");
-            btn.innerText = item.topic;
-
-            btn.onclick = () => {
-                document
-                  .querySelectorAll("#topicButtons button")
-                  .forEach(b => b.classList.remove("active-topic"));
-
-                btn.classList.add("active-topic");
-                showTopicSummary(index);
-            };
-            buttonsContainer.appendChild(btn);
-        });
-
-        summaryBox.style.display = "block";
-
-    } catch (error) {
-        alert("Failed to generate summary.");
-        console.error(error);
-    } finally {
-        loader.style.display = "none";
-    }
-}
-
-
-
-
-function showTopicSummary(index) {
-    document.getElementById("summaryText").innerText =
-        topicData[index].summary;
-
-    document.getElementById("topicSummary").style.display = "block";
-}
-
-// -----------------
-
-
-async function generateTopics() {
-    const wsid = document.getElementById("wsid").value.trim();
-    const productId = document.getElementById("productId").value.trim();
-
-    if (!wsid || !productId) {
-        alert("Please enter Store ID and Product ID");
-        return;
+            if (res.ok) {
+                showStatus("Review submitted successfully!", true);
+                document.getElementById("newReviewText").value = "";
+                setRating(0);
+            } else {
+                showStatus("Error: " + (data.error || "Unknown error"), false);
+            }
+        } catch (err) {
+            showStatus("Failed to connect to server.", false);
+            console.error(err);
+        }
     }
 
-    const topicBox = document.getElementById("topicBox");
-    const list = document.getElementById("topicList");
-    const loader = document.getElementById("loader");
+    function showStatus(msg, ok) {
+        const el = document.getElementById("reviewStatus");
+        el.textContent = msg;
+        el.className = "status-msg " + (ok ? "ok" : "err");
+        el.style.display = "block";
+        setTimeout(() => { el.style.display = "none"; }, 4000);
+    }
 
-    list.innerHTML = "";
-    topicBox.style.display = "none";
-    loader.style.display = "block";
-
-    try {
-        const res = await fetch("/topics/top", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                WSID: wsid,
-                product_id: productId
-            })
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
         });
+    }
 
-        const data = await res.json();
+    // ─── Generate Summary ────────────────────────────
+    async function generateSummary(type) {
+        const question   = document.getElementById("questionInput").value.trim();
+        const summaryBox = document.getElementById("summaryBox");
+        const loader     = document.getElementById("loader");
 
-        if (!res.ok) {
-            alert(data.error || "Failed to fetch topics");
+        if (type !== "neutral" && !question) {
+            alert("Please enter a question for this summary type.");
             return;
         }
 
-        if (!data.topics || data.topics.length === 0) {
-            list.innerHTML = "<li>No topics found</li>";
-        } else {
-            data.topics.forEach(t => {
-            const li = document.createElement("li");
+        loader.classList.add('active');
+        summaryBox.style.display = "none";
 
-            const span = document.createElement("span");
-            span.className = "topic-link";
-            span.dataset.topic = t.topic;
-            span.innerText = `${t.topic} (${t.count})`;
-            span.style.textTransform = "capitalize";
+        try {
+            const res  = await fetch("/ask", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    question:     question,
+                    wsid:         document.getElementById("wsid").value,
+                    product_id:   document.getElementById("productId").value,
+                    summary_type: type
+                })
+            });
+            const data = await res.json();
 
-            span.style.cursor = "pointer";
+            if (type === "neutral") {
+                document.getElementById("topicButtons").innerHTML = "";
+                document.getElementById("summaryText").innerText = data.answer || "No summary available.";
+                document.getElementById("topicSummary").style.display = "block";
+                summaryBox.style.display = "block";
+                return;
+            }
 
-            span.onclick = () => {
-                console.log("CLICKED TOPIC:", t.topic);
-                fetchReviewsByTopic(t.topic);
-            };
+            // Positive / Negative
+            topicData = data.topics || [];
+            const btnContainer = document.getElementById("topicButtons");
+            btnContainer.innerHTML = "";
+            document.getElementById("summaryText").innerText = "";
+            document.getElementById("topicSummary").style.display = "none";
 
-            li.appendChild(span);
-            list.appendChild(li);
-        });
-
-
-
-        }
-
-
-
-    } catch (err) {
-        console.error(err);
-        alert("Server error while fetching topics");
-    } finally {
-        loader.style.display = "none";
-        topicBox.style.display = "block";
-    }
-}
-async function fetchReviewsByTopic(topic) {
-    console.log("Fetching reviews for:", topic);
-
-    const wsid = document.getElementById("wsid").value.trim();
-    const productId = document.getElementById("productId").value.trim();
-
-    if (!wsid || !productId) {
-        alert("Store ID and Product ID required!");
-        return;
-    }
-
-    const res = await fetch(`/api/reviews-by-topic?topic=${encodeURIComponent(topic)}&wsid=${encodeURIComponent(wsid)}&product_id=${encodeURIComponent(productId)}`);
-    console.log("API URL:", res);
-    const data = await res.json();
-    console.log("API RESPONSE:", data);
-    const box = document.getElementById("reviewsBox");
-    const content = document.getElementById("reviewsContent");
-
-    if (!data.reviews || data.reviews.length === 0) {
-        content.innerHTML = `<p>No reviews found for topic: <b>${topic}</b></p>`;
-        box.style.display = "block";
-        return;
-    }
-
-    let html = `<p><b>Topic:</b> ${topic}</p><ul>`;
-    data.reviews.forEach(r => {
-        html += `
-            <li style="margin-bottom:10px;">
-                <b>Rating:</b> ${r.rating}<br>
-                <b>Review:</b> ${r.review_text}
-            </li>
-        `;
-    });
-    html += `</ul>`;
-
-    content.innerHTML = html;
-    box.style.display = "block";
-}
-
-async function sendMessage() {
-    const input = document.getElementById("chatInput");
-    const messages = document.getElementById("chatMessages");
-
-    const question = input.value.trim();
-    const wsid = document.getElementById("chat_wsid").value.trim();
-    const productId = document.getElementById("chat_productId").value.trim();
-
-    console.log("CHAT wsid:", wsid);
-    console.log("CHAT product_id:", productId);
-    console.log("CHAT question:", question);
-
-    if (!wsid || !productId) {
-        alert("Please enter Store ID and Product ID");
-        return;
-    }
-
-    if (!question) return;
-
-    // User bubble
-    const userDiv = document.createElement("div");
-    userDiv.className = "message user";
-    userDiv.innerText = question;
-    messages.appendChild(userDiv);
-
-    input.value = "";
-    messages.scrollTop = messages.scrollHeight;
-
-    // Typing indicator
-    const typingDiv = document.createElement("div");
-    typingDiv.className = "message bot";
-    typingDiv.innerText = "Typing...";
-    messages.appendChild(typingDiv);
-
-    try {
-        const response = await fetch("/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                wsid: wsid,
-                product_id: productId,
-                question: question
-            })
-        });
-
-        const data = await response.json();
-        typingDiv.remove();
-
-        const botDiv = document.createElement("div");
-        botDiv.className = "message bot";
-
-        /* Answer text */
-        const answerDiv = document.createElement("div");
-        answerDiv.innerText = data.answer || "No answer found.";
-        botDiv.appendChild(answerDiv);
-        
-        messages.appendChild(botDiv);
-
-        /* ===== Reviews OUTSIDE the bot bubble ===== */
-        if (data.reviews && data.reviews.length > 0) {
-
-            const btn = document.createElement("button");
-            btn.innerText = "Show reviews";
-            btn.className = "review-toggle-btn";
-
-            const reviewsDiv = document.createElement("div");
-            reviewsDiv.className = "review-container";
-            reviewsDiv.style.display = "none";
-
-            let html = "<strong>Reviews used:</strong>";
-
-            data.reviews.forEach(r => {
-                html += `
-                    <div class="review-item">
-                        <div class="review-rating">Rating: ${r.rating ?? "N/A"}</div>
-                        <div class="review-text">${r.review_text}</div>
-                    </div>
-                `;
+            topicData.forEach((item, i) => {
+                const btn = document.createElement("button");
+                btn.innerText = item.topic;
+                btn.onclick = () => {
+                    document.querySelectorAll("#topicButtons button").forEach(b => b.classList.remove("active-topic"));
+                    btn.classList.add("active-topic");
+                    showTopicSummary(i);
+                };
+                btnContainer.appendChild(btn);
             });
 
-            reviewsDiv.innerHTML = html;
+            summaryBox.style.display = "block";
 
-            btn.onclick = () => {
-                const show = reviewsDiv.style.display === "none";
-                reviewsDiv.style.display = show ? "block" : "none";
-                btn.innerText = show ? "Hide reviews" : "Show reviews";
-            };
-
-            messages.appendChild(btn);
-            messages.appendChild(reviewsDiv);
+        } catch (err) {
+            alert("Failed to generate summary.");
+            console.error(err);
+        } finally {
+            loader.classList.remove('active');
         }
-
-
-        messages.scrollTop = messages.scrollHeight;
-
-        messages.scrollTop = messages.scrollHeight;
-
-    } catch (err) {
-        typingDiv.innerText = "Error getting response.";
-        console.error(err);
     }
 
-// const chatInput = document.getElementById("chatInput");
+    function showTopicSummary(index) {
+        document.getElementById("summaryText").innerText = topicData[index].summary;
+        document.getElementById("topicSummary").style.display = "block";
+    }
 
-// if (chatInput) {
-//     chatInput.addEventListener("input", () => {
-//         // reset height so it can shrink if needed
-//         chatInput.style.height = "40px";
+    // ─── Generate Top Topics ─────────────────────────
+    async function generateTopics() {
+        const wsid      = document.getElementById("wsid").value.trim();
+        const productId = document.getElementById("productId").value.trim();
 
-//         // grow up to max height
-//         const newHeight = Math.min(chatInput.scrollHeight, 120);
-//         chatInput.style.height = newHeight + "px";
-//     });
-// }
+        if (!wsid || !productId) { alert("Please enter Store ID and Product ID"); return; }
 
-}
+        const topicBox = document.getElementById("topicBox");
+        const list     = document.getElementById("topicList");
+        const loader   = document.getElementById("loader");
 
+        list.innerHTML = "";
+        topicBox.style.display = "none";
+        loader.classList.add('active');
 
+        try {
+            const res  = await fetch("/topics/top", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ WSID: wsid, product_id: productId })
+            });
+            const data = await res.json();
+
+            if (!res.ok) { alert(data.error || "Failed to fetch topics"); return; }
+
+            if (!data.topics || data.topics.length === 0) {
+                list.innerHTML = '<li style="color:var(--muted2);padding:10px 14px;">No topics found.</li>';
+            } else {
+                data.topics.forEach(t => {
+                    const li   = document.createElement("li");
+                    const span = document.createElement("span");
+                    span.className = "topic-link";
+                    span.innerHTML = `
+                        <span style="text-transform:capitalize;">${t.topic}</span>
+                        <span class="topic-count">${t.count}</span>
+                    `;
+                    span.onclick = () => fetchReviewsByTopic(t.topic);
+                    li.appendChild(span);
+                    list.appendChild(li);
+                });
+            }
+
+            topicBox.style.display = "block";
+
+        } catch (err) {
+            console.error(err);
+            alert("Server error while fetching topics");
+        } finally {
+            loader.classList.remove('active');
+        }
+    }
+
+    // ─── Reviews by Topic ────────────────────────────
+    async function fetchReviewsByTopic(topic) {
+        const wsid      = document.getElementById("wsid").value.trim();
+        const productId = document.getElementById("productId").value.trim();
+        const box       = document.getElementById("reviewsBox");
+        const content   = document.getElementById("reviewsContent");
+
+        if (!wsid || !productId) { alert("Store ID and Product ID required!"); return; }
+
+        try {
+            const res  = await fetch(`/api/reviews-by-topic?topic=${encodeURIComponent(topic)}&wsid=${encodeURIComponent(wsid)}&product_id=${encodeURIComponent(productId)}`);
+            const data = await res.json();
+
+            if (!data.reviews || data.reviews.length === 0) {
+                content.innerHTML = `<p style="color:var(--muted2);">No reviews found for <b>${topic}</b></p>`;
+                box.style.display = "block";
+                return;
+            }
+
+            let html = `<div style="font-size:11px;font-family:'DM Mono',monospace;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:10px;">${topic}</div>
+                        <div class="review-list">`;
+            data.reviews.forEach(r => {
+                const rating = r.rating ?? 0;
+                const stars  = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+                html += `
+                    <div class="review-card">
+                        <div class="review-card-meta">
+                            <span class="stars ${rating <= 2 ? 'low' : ''}">${stars}</span>
+                            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted2);">${rating}/5</span>
+                        </div>
+                        <div class="review-card-text">${r.review_text}</div>
+                    </div>`;
+            });
+            html += `</div>`;
+
+            content.innerHTML = html;
+            box.style.display = "block";
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    // ─── Chat ────────────────────────────────────────
+    async function sendMessage() {
+        const input     = document.getElementById("chatInput");
+        const messages  = document.getElementById("chatMessages");
+        const question  = input.value.trim();
+        const wsid      = document.getElementById("chat_wsid").value.trim();
+        const productId = document.getElementById("chat_productId").value.trim();
+
+        if (!wsid || !productId) { alert("Please enter Store ID and Product ID"); return; }
+        if (!question) return;
+
+        // Clear empty state
+        const empty = messages.querySelector('.empty');
+        if (empty) empty.remove();
+
+        // User bubble
+        appendMsg('user', question, messages);
+        input.value = "";
+        input.style.height = "40px";
+        messages.scrollTop = messages.scrollHeight;
+
+        // Typing indicator
+        const typing = appendMsg('bot typing', 'Thinking…', messages);
+
+        try {
+            const res  = await fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ wsid, product_id: productId, question })
+            });
+            const data = await res.json();
+
+            typing.remove();
+
+            appendMsg('bot', data.answer || "No answer found.", messages);
+
+            // Reviews toggle
+            if (data.reviews && data.reviews.length > 0) {
+                const btn = document.createElement("button");
+                btn.className = "review-toggle-btn";
+                btn.innerText = "Show reviews used";
+
+                const revWrap = document.createElement("div");
+                revWrap.className = "review-container";
+                revWrap.style.display = "none";
+
+                let html = `<div class="review-list">`;
+                data.reviews.forEach(r => {
+                    const rating = r.rating ?? 0;
+                    const stars  = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+                    html += `
+                        <div class="review-card">
+                            <div class="review-card-meta">
+                                <span class="stars ${rating <= 2 ? 'low' : ''}">${stars}</span>
+                                <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted2);">${rating}/5</span>
+                            </div>
+                            <div class="review-card-text">${r.review_text}</div>
+                        </div>`;
+                });
+                html += `</div>`;
+                revWrap.innerHTML = html;
+
+                btn.onclick = () => {
+                    const show = revWrap.style.display === "none";
+                    revWrap.style.display = show ? "block" : "none";
+                    btn.innerText = show ? "Hide reviews" : "Show reviews used";
+                };
+
+                messages.appendChild(btn);
+                messages.appendChild(revWrap);
+            }
+
+        } catch (err) {
+            typing.innerText = "Error getting response.";
+            console.error(err);
+        }
+
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    function appendMsg(className, text, container) {
+        const div = document.createElement("div");
+        div.className = "msg " + className;
+        div.innerText = text;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+        return div;
+    }
 </script>
-
-
-
 
 </body>
 </html>
